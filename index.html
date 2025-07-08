@@ -2,74 +2,42 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Analog Clock</title>
-  <style>
-    /* CSS for the clock */
-    #clock {
-      width: 200px;
-      height: 200px;
-      background-color: #f2f2f2;
-      border-radius: 50%;
-      position: relative;
-    }
-
-    .hand {
-      background-color: #333;
-      position: absolute;
-      transform-origin: bottom center;
-    }
-
-    #hour-hand {
-      width: 8px;
-      height: 70px;
-      top: 50px;
-      left: 96px;
-    }
-
-    #minute-hand {
-      width: 6px;
-      height: 90px;
-      top: 30px;
-      left: 97px;
-    }
-
-    #second-hand {
-      width: 2px;
-      height: 100px;
-      top: 20px;
-      left: 99px;
-      background-color: red;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rainbow Website</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="clock">
-    <div id="hour-hand" class="hand"></div>
-    <div id="minute-hand" class="hand"></div>
-    <div id="second-hand" class="hand"></div>
+  <header>
+    <h1>Rainbow Website</h1>
+  </header>
+  <button id="party-button">Party Popper!</button>
+  <div id="confetti-container"></div>
+  <div class="content">
+    <div class="clock">
+      <h2>Digital Clock</h2>
+      <div id="digital-clock"></div>
+    </div>
+
+    <div class="calendar">
+      <h2>Calendar</h2>
+      <div id="calendar"></div>
+    </div>
+
+    <div class="contact">
+      <h2>Contact Details</h2>
+      <ul>
+        <li>Email: contact@example.com</li>
+        <li>Phone: 123-456-7890</li>
+        <li>Address: 123 Rainbow Street, City</li>
+      </ul>
+    </div>
   </div>
 
-  <script>
-    function updateClock() {
-      var now = new Date();
-      var hour = now.getHours();
-      var minute = now.getMinutes();
-      var second = now.getSeconds();
+  <footer>
+    <p>&copy; 2023 Rainbow Website. All rights reserved.</p>
+  </footer>
 
-      var hourRotation = (hour % 12) * 30 + minute / 2;
-      var minuteRotation = minute * 6 + second / 10;
-      var secondRotation = second * 6;
+  <script src="script.js"></script>
 
-      var hourHand = document.getElementById("hour-hand");
-      var minuteHand = document.getElementById("minute-hand");
-      var secondHand = document.getElementById("second-hand");
-
-      hourHand.style.transform = "rotate(" + hourRotation + "deg)";
-      minuteHand.style.transform = "rotate(" + minuteRotation + "deg)";
-      secondHand.style.transform = "rotate(" + secondRotation + "deg)";
-    }
-
-    setInterval(updateClock, 1000); // Update every second
-  </script>
 </body>
 </html>
