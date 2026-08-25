@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Weather Station Midea — Smart AC Climate Control</title>
+<meta name="description" content="Arduino-based intelligent climate control system with reverse-engineered Midea IR protocol, dual-sensor monitoring (DHT, HDC1080), and automated heating/cooling/humidification. Full hardware pin map, IR protocol documentation, and deployment guide.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --accent:var(--copper);
+}
+html[data-theme="dark"]{
+  color-scheme:dark;
+  --paper:#191C18;   --ink:#E2E0D4;   --dim:#A9AFA0;
+  --line:rgba(226,224,212,.16);
+  --green:#57B48C;   --steel:#86AAC4; --copper:#D28B5A;
+  --brass:#C9A94F;   --slate:#9BA394;
+  --weight:500;
+}
+html[data-theme="light"]{
+  color-scheme:light;
+  --paper:#E9E7DD;   --ink:#1B1D14;   --dim:#4E5348;
+  --line:rgba(27,29,20,.16);
+  --green:#0E5A3E;   --steel:#2E4A5E; --copper:#8F4A1E;
+  --brass:#6F5417;   --slate:#414A42;
+  --weight:600;
+}
+*{box-sizing:border-box}
+body{
+  margin:0 auto; max-width:640px; padding:64px 24px 80px;
+  background:var(--paper); color:var(--ink);
+  font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:16px; line-height:1.68; -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+h1{font-size:1.5rem; font-weight:var(--weight); margin:0 0 4px; letter-spacing:.005em}
+.role{font-family:var(--mono); font-size:12.5px; letter-spacing:.05em;
+  color:var(--dim); margin:0 0 28px}
+.band{display:flex; height:5px; margin:0 0 26px; border-radius:2px; overflow:hidden}
+.band i{flex:1}
+.band i:nth-child(1){background:var(--copper)}
+.band i:nth-child(2){background:var(--brass)}
+.band i:nth-child(3){background:var(--green)}
+.intro{margin:0 0 12px}
+section{margin:40px 0 0}
+h2{font-family:var(--mono); font-size:11px; font-weight:600;
+  letter-spacing:.16em; text-transform:uppercase; color:var(--accent);
+  margin:32px 0 16px; padding-bottom:9px; border-bottom:2px solid var(--accent);
+  display:flex; align-items:center; gap:9px}
+h2::before{content:""; width:9px; height:9px; background:var(--accent);
+  border-radius:2px; flex:none}
+h3{font-size:14px; font-weight:var(--weight); margin:18px 0 8px; color:var(--ink)}
+p{margin:0 0 12px; color:var(--dim)}
+code{font-family:var(--mono); font-size:13px; background:rgba(0,0,0,.1);
+  padding:2px 6px; border-radius:2px; color:var(--copper)}
+table{width:100%; border-collapse:collapse; margin:12px 0 20px; font-size:14px}
+th{text-align:left; font-family:var(--mono); font-size:10px; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--accent); border-bottom:2px solid var(--accent);
+  padding:8px 4px; font-weight:600}
+td{border-bottom:1px solid var(--line); padding:8px 4px; color:var(--dim)}
+tr:hover td{background:rgba(255,255,255,.02)}
+.spec{margin:16px 0; padding:12px; border-left:3px solid var(--accent);
+  background:rgba(0,0,0,.05)}
+.spec dt{font-family:var(--mono); font-size:10px; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--accent); margin-bottom:2px}
+.spec dd{margin:0; color:var(--dim); font-size:13px; padding-left:12px}
+pre{background:rgba(0,0,0,.1); padding:12px; border-radius:4px;
+  overflow-x:auto; font-size:12px; line-height:1.4; margin:12px 0}
+ul{margin:0; padding-left:20px; list-style:none}
+li{margin:6px 0; padding-left:12px; position:relative}
+li::before{content:"▪"; position:absolute; left:0; color:var(--accent)}
+.back{display:inline-block; font-family:var(--mono); font-size:11px;
+  letter-spacing:.08em; color:var(--copper); text-decoration:none;
+  margin-bottom:20px}
+.back:hover{color:var(--accent)}
+.theme{position:fixed; top:20px; right:20px; z-index:5;
+  display:flex; align-items:center; gap:8px;
+  background:none; border:1px solid var(--line); border-radius:100px;
+  padding:7px 13px 7px 10px; cursor:pointer; color:var(--dim);
+  font-family:var(--mono); font-size:10.5px; letter-spacing:.12em; text-transform:uppercase;
+  transition:color .3s, border-color .3s}
+.theme:hover{color:var(--ink); border-color:var(--accent)}
+.theme svg{width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:1.6;
+  stroke-linecap:round; flex:none}
+.theme .moon{display:none}
+html[data-theme="light"] .theme .sun{display:none}
+html[data-theme="light"] .theme .moon{display:block}
+body{transition:background-color 1.9s cubic-bezier(.4,0,.2,1)}
+section,h2,h3,p,table,pre,code,.spec{
+  transition:border-color 1.9s cubic-bezier(.4,0,.2,1),
+    background-color 1.9s cubic-bezier(.4,0,.2,1),
+    color 1.9s cubic-bezier(.4,0,.2,1)}
+@media(max-width:520px){
+  table{font-size:12px}
+  th,td{padding:6px 2px}
+}
+</style>
+</head>
+<body>
+
+<button class="theme" id="themeBtn" type="button" aria-pressed="false"
+  aria-label="Switch between day and night">
+  <svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/>
+    <path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6"/></svg>
+  <svg class="moon" viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M20.5 14.6A8.6 8.6 0 0 1 9.4 3.5a8.6 8.6 0 1 0 11.1 11.1z"/></svg>
+  <span class="label">Night</span>
+</button>
+
+<a href="/" class="back">← Back to portfolio</a>
+
+<h1>Weather Station Midea</h1>
+<p class="role">Smart AC climate control · reverse-engineered IR protocol · dual-sensor monitoring</p>
+<div class="band" aria-hidden="true"><i></i><i></i><i></i></div>
+
+<p class="intro">An intelligent climate control system that autonomously manages heating, cooling, and humidity via reverse-engineered Midea IR protocol. Combines environmental monitoring (temperature, humidity, heat index) with sophisticated state machines, DIP switch calibration, and real-time LCD feedback. Supports Arduino, ESP32, STM32, and RP2040 platforms.</p>
+
+<section>
+<h2>Project Purpose</h2>
+<p>This system implements autonomous climate management for residential or commercial spaces by:</p>
+<ul>
+  <li><b>Monitoring conditions</b> via dual-sensor approach (DHT11/22 + HDC1080 option)</li>
+  <li><b>Controlling Midea AC units</b> using decoded 48-bit IR protocol (Pronto format)</li>
+  <li><b>Maintaining comfort zones</b> with threshold-based automation (heating, cooling, humidification)</li>
+  <li><b>Providing calibration</b> via hardware DIP switches (±0.5–3.5°C offset adjustment)</li>
+  <li><b>Displaying status</b> on 16×4 LCD (real-time temp, humidity, mode, AC state)</li>
+  <li><b>Handling failures gracefully</b> with debouncing, bounce detection, and fallback logic</li>
+</ul>
+</section>
+
+<section>
+<h2>Hardware Architecture</h2>
+
+<h3>Microcontroller Platforms</h3>
+<p><b>Primary:</b> ESP32 (recommended for modern deployments)</p>
+<p><b>Also Supported:</b> Arduino Uno/Nano, ATtiny, STM32 (BluePill), RP2040 (Raspberry Pi Pico)</p>
+<p>Pin mappings for all platforms defined in <code>PinDefinitionsAndMore.h</code></p>
+
+<h3>Environmental Sensors</h3>
+<table>
+  <thead><tr><th>Sensor</th><th>Protocol</th><th>Accuracy</th><th>Range</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td>DHT11/22</td><td>1-wire digital</td><td>±2°C, ±5% humidity</td><td>-40 to +80°C</td><td>Primary temp/humidity</td></tr>
+    <tr><td>HDC1080</td><td>I²C (0x40)</td><td>±0.2°C, ±2% humidity</td><td>-40 to +125°C</td><td>High-precision (optional)</td></tr>
+  </tbody>
+</table>
+
+<h3>IR Control Components</h3>
+<div class="spec">
+  <dt>IR Transmitter</dt>
+  <dd>940 nm LED driven by 2N2222 transistor; 100–220 Ω current limiting resistor</dd>
+  <dt>Carrier Frequency</dt>
+  <dd>109 kHz (Midea standard); generated via PWM</dd>
+  <dt>Protocol</dt>
+  <dd>Pronto hex format (universal IR remote standard)</dd>
+  <dt>Range</dt>
+  <dd>10–15 meters (typical); line-of-sight to AC unit required</dd>
+  <dt>Transmission Timing</dt>
+  <dd>~100–150 ms per command; 100 ms cooldown between repeated commands</dd>
+</div>
+
+<h3>User Interface</h3>
+<ul>
+  <li><b>LCD Display:</b> 16×4 HD44780 compatible, I²C address 0x27, real-time status</li>
+  <li><b>DIP Switches (4-position):</b> Temperature offset calibration (pins 9–12)</li>
+  <li><b>Mode Toggle:</b> Pin 8 (HEATER_MODE) — switches between heating and cooling operation</li>
+  <li><b>AC Enable Button:</b> Pin 7 (ac_disabled_pin) — manual enable/disable</li>
+</ul>
+</section>
+
+<section>
+<h2>Pin Configuration (ESP32 Primary)</h2>
+
+<table>
+  <thead><tr><th>Function</th><th>GPIO</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td>IR Receiver</td><td>15</td><td>Input from demodulated IR receiver (555 timer conditioned)</td></tr>
+    <tr><td>IR Transmitter</td><td>4</td><td>PWM output to IR LED control circuit</td></tr>
+    <tr><td>Tone/Alert</td><td>27</td><td>Piezo buzzer or audible feedback</td></tr>
+    <tr><td>Application Status</td><td>16</td><td>Status indicator (RX2 pin)</td></tr>
+    <tr><td>Humidifier Relay</td><td>4</td><td>Active HIGH to engage dehumidifier</td></tr>
+    <tr><td>DIP Switch A</td><td>9</td><td>+0.5°C offset bit</td></tr>
+    <tr><td>DIP Switch B</td><td>10</td><td>+1.0°C offset bit</td></tr>
+    <tr><td>DIP Switch C</td><td>11</td><td>+2.0°C offset bit</td></tr>
+    <tr><td>DIP Switch D</td><td>12</td><td>Invert offset (negate sum)</td></tr>
+    <tr><td>Heater Mode Toggle</td><td>8</td><td>LOW=Cooling, HIGH=Heating</td></tr>
+    <tr><td>AC Disable Button</td><td>7</td><td>Momentary contact; active LOW</td></tr>
+    <tr><td>Humidifier Indication</td><td>14</td><td>Status LED or relay feedback</td></tr>
+  </tbody>
+</table>
+
+<h3>I²C Devices</h3>
+<div class="spec">
+  <dt>HDC1080 Sensor</dt>
+  <dd>Address 0x40 (if present); optional upgrade for precision</dd>
+  <dt>LCD Display</dt>
+  <dd>Address 0x27; 16×4 configuration with backlight</dd>
+  <dt>I²C Bus</dt>
+  <dd>Standard Arduino SCL/SDA pins (platform-dependent; typically A4/A5 on Nano)</dd>
+</div>
+</section>
+
+<section>
+<h2>Midea IR Protocol</h2>
+
+<h3>48-Bit Command Structure</h3>
+<pre>Bits 0–3:   Power (0=OFF, 1=ON)
+Bits 4–7:   Mode (0=Cool, 1=Dry, 2=Fan, 3=Heat)
+Bits 8–13:  Temperature (6 bits, range 16–31°C)
+Bits 14–16: Fan Speed (0=Auto, 1=Low, 2=Mid, 3=High)
+Bits 17–20: Swing (0=OFF, 1=ON) — vertical louver auto-swing
+Bits 21–23: Reserved (zero padding)</pre>
+
+<h3>Temperature Setpoints</h3>
+<table>
+  <thead><tr><th>Mode</th><th>Supported Temps</th></tr></thead>
+  <tbody>
+    <tr><td>Heating</td><td>16°C, 17°C, 19°C, 20°C, 22°C (+ OFF)</td></tr>
+    <tr><td>Cooling</td><td>25°C, 26°C, 27°C, 28°C, 30°C (+ OFF)</td></tr>
+  </tbody>
+</table>
+
+<h3>Pronto Format</h3>
+<div class="spec">
+  <dt>Format</dt>
+  <dd>Hexadecimal; two-part IR commands (Part A + Part B)</dd>
+  <dt>Part A</dt>
+  <dd>100–114 phase units (38 kHz carrier frequency encoding)</dd>
+  <dt>Part B</dt>
+  <dd>50 phase units (command tail)</dd>
+  <dt>Buffer Size</dt>
+  <dd>270 bytes per Pronto code; stored in PROGMEM to save RAM</dd>
+  <dt>Transmission</dt>
+  <dd>Raw PWM via <code>IrSender.sendPronto()</code>; repeat 3 times (NUMBER_OF_REPEATS)</dd>
+</div>
+
+<h3>Auto-Repeat Logic</h3>
+<p>When AC or heater is in active (ON) state, the system re-transmits commands every 10 minutes (600,000 ms) to compensate for IR signal degradation or receiver interference. This ensures reliable continuous operation even if a single transmission packet is lost.</p>
+</section>
+
+<section>
+<h2>Software Architecture</h2>
+
+<h3>Three Independent State Machines</h3>
+
+<h4>1. AC Cooling Controller</h4>
+<table>
+  <thead><tr><th>State</th><th>Transition Condition</th><th>Action</th></tr></thead>
+  <tbody>
+    <tr><td>OFF</td><td>Heat index &gt; 27.2°C AND humidity &gt; 33%</td><td>→ BOUNCING_FOR_ON</td></tr>
+    <tr><td>ON</td><td>Heat index &lt; 26.8°C OR humidity &lt; 30%</td><td>→ BOUNCING_FOR_OFF</td></tr>
+    <tr><td>DISABLED</td><td>Manual button press</td><td>→ ENABLED</td></tr>
+  </tbody>
+</table>
+<p>Bounce counter: 6 cycles minimum before state change (prevents rapid cycling)</p>
+
+<h4>2. Heater Controller</h4>
+<table>
+  <thead><tr><th>State</th><th>Trigger</th><th>Disable</th></tr></thead>
+  <tbody>
+    <tr><td>ENABLE</td><td>Room temp &lt; 19.8°C (min_temp)</td><td>Room temp &gt; 20.2°C (max_temp)</td></tr>
+    <tr><td>DISABLE</td><td>Manual mode toggle (pin 8)</td><td>—</td></tr>
+  </tbody>
+</table>
+<p>Bounce counter: 6 cycles; prevents compressor short-cycling</p>
+
+<h4>3. Humidifier Controller</h4>
+<table>
+  <thead><tr><th>State</th><th>Activation</th><th>Deactivation</th></tr></thead>
+  <tbody>
+    <tr><td>ON</td><td>Humidity &lt; 39% (MIN_HUMD)</td><td>Humidity &gt; 43% (MAX_HUMD)</td></tr>
+    <tr><td>OFF</td><td>—</td><td>AC disabled OR humidity exceeds MAX</td></tr>
+  </tbody>
+</table>
+<p>GPIO-driven relay; only active when AC unit is enabled</p>
+
+<h3>Core Firmware Modules</h3>
+<div class="spec">
+  <dt>midea_ac.ino (738 lines)</dt>
+  <dd>Main controller; orchestrates all three state machines, sensor reads, LCD updates, IR transmission</dd>
+</div>
+
+<div class="spec">
+  <dt>PinDefinitionsAndMore.h</dt>
+  <dd>Multi-platform pin mapping (10+ boards); selects correct pins based on board type</dd>
+</div>
+
+<div class="spec">
+  <dt>IR Transmission Functions</dt>
+  <dd><code>ac_cooling_enable()</code>, <code>ac_cooling_disable()</code>, <code>heating_enable()</code>, <code>heating_disable()</code>, <code>humidifier_on()</code>, <code>humidifier_off()</code></dd>
+</div>
+
+<div class="spec">
+  <dt>Display Functions</dt>
+  <dd><code>ac_state_lcd()</code>, <code>heater_state_lcd()</code>, LCD refresh with real-time temp/humidity/mode</dd>
+</div>
+
+<div class="spec">
+  <dt>Calibration</dt>
+  <dd><code>Dip_Switch_Offset()</code> — reads 4-position switches; computes ±0.5–3.5°C adjustment</dd>
+</div>
+</section>
+
+<section>
+<h2>Configuration Parameters</h2>
+
+<h3>Temperature Control (Heater)</h3>
+<div class="spec">
+  <dt>Base min_temp</dt>
+  <dd>19.8°C (adjustable via DIP switches ±0.5–3.5°C)</dd>
+  <dt>Base max_temp</dt>
+  <dd>20.2°C (defines comfort band width of 0.4°C)</dd>
+  <dt>Trigger Logic</dt>
+  <dd>If room &lt; min_temp → activate heater; if &gt; max_temp → stop</dd>
+</div>
+
+<h3>Humidity Thresholds</h3>
+<div class="spec">
+  <dt>ABOVE_ZERO_LEVEL_HUMD</dt>
+  <dd>33% (AC on if humidity exceeds)</dd>
+  <dt>MIN_HUMD (Humidifier)</dt>
+  <dd>39% (activate dehumidifier)</dd>
+  <dt>MAX_HUMD (Humidifier)</dt>
+  <dd>43% (deactivate dehumidifier)</dd>
+</div>
+
+<h3>Heat Index Thresholds (AC Cooling)</h3>
+<div class="spec">
+  <dt>HC_MAX_HIDEX</dt>
+  <dd>27.2 (trigger AC cooling)</dd>
+  <dt>HC_MIN_HIDEX</dt>
+  <dd>26.8 (disable AC cooling)</dd>
+  <dt>Combined Condition</dt>
+  <dd>AC activates only if heat index &gt; 27.2 AND humidity &gt; 33%</dd>
+</div>
+
+<h3>Timing Parameters</h3>
+<div class="spec">
+  <dt>MAX_BOUNCE_COUNT</dt>
+  <dd>6 cycles (state machine debounce)</dd>
+  <dt>KEY_DOWN_TIME</dt>
+  <dd>50 ms (button debounce lower threshold)</dd>
+  <dt>KEY_UP_TIME</dt>
+  <dd>250 ms (button debounce upper threshold)</dd>
+  <dt>REPEAT_ACTION_INTERVAL</dt>
+  <dd>600,000 ms (10 minutes — re-transmit active commands)</dd>
+</div>
+
+<h3>DIP Switch Calibration</h3>
+<pre>Switch A: +0.5°C
+Switch B: +1.0°C
+Switch C: +2.0°C
+Switch D: Invert (negate total)
+
+Examples:
+  A+B set → +1.5°C offset
+  A+B+C set → +3.5°C offset
+  D alone → -0°C (no offset)
+  A+D set → -0.5°C offset</pre>
+</section>
+
+<section>
+<h2>Sensor Data Flow</h2>
+
+<h3>Reading Sequence (Main Loop)</h3>
+<ol style="padding-left:20px">
+  <li>Read DHT11/22 (wait ≥2 seconds between reads)</li>
+  <li>Read HDC1080 (I²C, if present)</li>
+  <li>Calculate heat index from temp + humidity</li>
+  <li>Compare against thresholds</li>
+  <li>Execute AC, heater, humidifier state machines</li>
+  <li>Transmit IR command (if state changed)</li>
+  <li>Update LCD with current status</li>
+  <li>Check button inputs and DIP switch calibration</li>
+  <li>Sleep/delay until next cycle</li>
+</ol>
+
+<h3>Error Handling</h3>
+<ul>
+  <li><b>Sensor Failure:</b> Caches last valid reading; retries on next cycle</li>
+  <li><b>IR Transmission Fault:</b> Retries up to 3 times before alerting user</li>
+  <li><b>AC Non-Response:</b> Logs failed command; suggests manual intervention</li>
+  <li><b>Button Glitch:</b> Software debouncing with configurable thresholds prevents false triggers</li>
+</ul>
+</section>
+
+<section>
+<h2>Power Consumption</h2>
+
+<table>
+  <thead><tr><th>Component</th><th>Current Draw</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>ESP32 Idle</td><td>~50 mA</td><td>Deep sleep mode available (~10 μA)</td></tr>
+    <tr><td>DHT11/22 (active read)</td><td>2 mA peak</td><td>Brief pulse during read transaction</td></tr>
+    <tr><td>HDC1080 (I²C)</td><td>&lt;1 mA</td><td>Negligible power draw</td></tr>
+    <tr><td>LCD Display</td><td>10–50 mA</td><td>Depends on backlight brightness</td></tr>
+    <tr><td>IR LED Transmission</td><td>100 mA peak</td><td>Only during 100–150 ms command burst</td></tr>
+    <tr><td><b>Total Typical</b></td><td><b>~80–150 mA</b></td><td>Varies with LCD backlight &amp; IR duty cycle</td></tr>
+  </tbody>
+</table>
+
+<p><b>Recommended Power Supply:</b> 5V/1A USB or barrel jack (with onboard regulator for 9V input)</p>
+</section>
+
+<section>
+<h2>Dependencies & Libraries</h2>
+
+<table>
+  <thead><tr><th>Library</th><th>Version</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td>IRremote</td><td>Latest</td><td>IR transmission/reception; Pronto format support</td></tr>
+    <tr><td>ClosedCube_HDC1080</td><td>Any</td><td>HDC1080 temperature/humidity (optional)</td></tr>
+    <tr><td>DHTesp</td><td>Latest</td><td>DHT sensor + heat index calculation</td></tr>
+    <tr><td>LiquidCrystal_I2C</td><td>Any</td><td>LCD display driver (16×4, address 0x27)</td></tr>
+    <tr><td>Wire</td><td>Arduino Core</td><td>I²C communication</td></tr>
+    <tr><td>EEPROM</td><td>Arduino Core</td><td>Persistent settings (optional)</td></tr>
+  </tbody>
+</table>
+
+<p><b>Board Support:</b> Requires ESP32 board package for primary deployment; other platforms via core-specific installations</p>
+</section>
+
+<section>
+<h2>Deployment & Installation</h2>
+
+<h3>Hardware Assembly</h3>
+<ol style="padding-left:20px">
+  <li>Mount ESP32 on breadboard or PCB</li>
+  <li>Connect DHT11/22 to GPIO 15 with 4.7 kΩ pull-up</li>
+  <li>Connect HDC1080 (optional) to I²C bus (SCL/SDA)</li>
+  <li>Build IR transmitter circuit: IR LED + 2N2222 transistor (base to GPIO 4 via 470 Ω)</li>
+  <li>Wire 555 timer signal conditioning circuit for IR receiver (GPIO 15)</li>
+  <li>Connect LCD via I²C (address 0x27)</li>
+  <li>Wire DIP switches to GPIO 9–12 (with pull-ups)</li>
+  <li>Connect mode toggle to GPIO 8 and AC disable button to GPIO 7</li>
+  <li>Power via 5V/1A USB or barrel jack (9V with regulator)</li>
+</ol>
+
+<h3>Firmware Upload</h3>
+<ol style="padding-left:20px">
+  <li>Install Arduino IDE 1.8.x or later</li>
+  <li>Install ESP32 board package via Boards Manager</li>
+  <li>Install required libraries: IRremote, DHTesp, LiquidCrystal_I2C, ClosedCube_HDC1080</li>
+  <li>Open <code>midea_ac.ino</code> in Arduino IDE</li>
+  <li>Select board type: "ESP32 Dev Module" (or appropriate variant)</li>
+  <li>Configure serial port and upload</li>
+</ol>
+
+<h3>Calibration Steps</h3>
+<ol style="padding-left:20px">
+  <li>Power on; verify LCD displays temperature and humidity</li>
+  <li>Compare DHT reading against reference thermometer</li>
+  <li>If DHT reads high/low, adjust DIP switches to match (±0.5–3.5°C range)</li>
+  <li>Point IR LED at AC unit and press mode button; verify AC responds</li>
+  <li>Test temperature setpoints: adjust min_temp/max_temp in code as needed</li>
+  <li>Verify humidifier threshold behavior (activate at 39%, deactivate at 43%)</li>
+</ol>
+</section>
+
+<section>
+<h2>Testing Checklist</h2>
+<ul>
+  <li>☐ DHT sensor reads temperature &amp; humidity (±2°C accuracy)</li>
+  <li>☐ HDC1080 (if present) reads with expected ±0.2°C precision</li>
+  <li>☐ LCD displays temp, humidity, mode, AC state, heat index in real-time</li>
+  <li>☐ DIP switches adjust temperature offset correctly (±0.5–3.5°C)</li>
+  <li>☐ Mode toggle (pin 8) switches between heating and cooling operation</li>
+  <li>☐ AC disable button (pin 7) toggles AC enable/disable state</li>
+  <li>☐ IR LED transmits; AC unit responds to Cool/Heat/Fan commands</li>
+  <li>☐ AC activates when heat index &gt; 27.2°C AND humidity &gt; 33%</li>
+  <li>☐ AC deactivates when heat index &lt; 26.8°C OR humidity &lt; 30%</li>
+  <li>☐ Heater activates when temp &lt; 19.8°C; deactivates when &gt; 20.2°C</li>
+  <li>☐ Humidifier activates at &lt;39% humidity; deactivates at &gt;43%</li>
+  <li>☐ State machine bounce detection prevents rapid on/off cycling (6-cycle debounce)</li>
+  <li>☐ Auto-repeat logic re-transmits commands every 10 minutes when AC/heater active</li>
+  <li>☐ Button debouncing works; no chattering or false triggers</li>
+  <li>☐ Power consumption measured; within 80–150 mA typical range</li>
+  <li>☐ No memory leaks over 1+ hour runtime; stable operation</li>
+</ul>
+</section>
+
+<section>
+<h2>Resources</h2>
+<p><b>GitHub:</b> <a href="https://github.com/amd858/weather_station_midea" style="color:var(--ink); border-bottom:1px solid var(--copper); text-decoration:none">amd858/weather_station_midea</a></p>
+<p>Includes captured PulseView files (.pvs/.sr), gray code IR data exports, and 555 timer circuit schematics.</p>
+</section>
+
+<script>
+(function(){
+  var root=document.documentElement, btn=document.getElementById('themeBtn'), label=btn.querySelector('.label'), saved=null;
+  try{ saved=localStorage.getItem('theme'); }catch(e){}
+  var start = saved || 'dark';
+  apply(start,false);
+  function apply(mode){
+    root.setAttribute('data-theme',mode);
+    btn.setAttribute('aria-pressed', mode==='light' ? 'true' : 'false');
+    label.textContent = mode==='dark' ? 'Day' : 'Night';
+    try{ localStorage.setItem('theme',mode); }catch(e){}
+  }
+  btn.addEventListener('click',function(){
+    apply(root.getAttribute('data-theme')==='dark' ? 'light' : 'dark');
+  });
+})();
+</script>
+</body>
+</html>
