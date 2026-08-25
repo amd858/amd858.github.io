@@ -1,43 +1,509 @@
 <!DOCTYPE html>
-<html>
+<html lang="en" data-theme="dark">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rainbow Website</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ahmed — Embedded Systems &amp; Electronics</title>
+<meta name="description" content="Embedded systems and electronics developer in Lahore, Pakistan. Firmware, sensors, automation, power electronics and Python automation.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --accent:var(--green);
+}
+/* ---- night: warm graphite, low glare ---- */
+html[data-theme="dark"]{
+  color-scheme:dark;
+  --paper:#191C18;   --ink:#E2E0D4;   --dim:#A9AFA0;
+  --line:rgba(226,224,212,.16);
+  --green:#57B48C;   --steel:#86AAC4; --copper:#D28B5A;
+  --brass:#C9A94F;   --slate:#9BA394;
+  --art-mech:.16; --art-trace:.15; --art-pad:.20; --art-leaf:.15;
+  --weight:500;
+}
+/* ---- day: warm board stock, never pure white ---- */
+html[data-theme="light"]{
+  color-scheme:light;
+  --paper:#E9E7DD;   --ink:#1B1D14;   --dim:#4E5348;
+  --line:rgba(27,29,20,.16);
+  --green:#0E5A3E;   --steel:#2E4A5E; --copper:#8F4A1E;
+  --brass:#6F5417;   --slate:#414A42;
+  --art-mech:.20; --art-trace:.18; --art-pad:.24; --art-leaf:.20;
+  --weight:600;
+}
+*{box-sizing:border-box}
+body{
+  margin:0 auto; max-width:640px; padding:64px 24px 80px;
+  background:var(--paper); color:var(--ink);
+  font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:16px; line-height:1.68; -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+h1{font-size:1.5rem; font-weight:var(--weight); margin:0 0 4px; letter-spacing:.005em;
+  color:var(--ink)}
+.role{font-family:var(--mono); font-size:12.5px; letter-spacing:.05em;
+  color:var(--dim); margin:0 0 28px}
+.band{display:flex; height:5px; margin:0 0 26px; border-radius:2px; overflow:hidden}
+.band i{flex:1}
+.band i:nth-child(1){background:var(--green)}
+.band i:nth-child(2){background:var(--steel)}
+.band i:nth-child(3){background:var(--copper)}
+.band i:nth-child(4){background:var(--brass)}
+.band i:nth-child(5){background:var(--slate)}
+.intro{margin:0 0 12px}
+.hint{font-family:var(--mono); font-size:11.5px; color:var(--dim);
+  letter-spacing:.04em}
+section{--accent:var(--green)}
+section.s-code{--accent:var(--steel)}
+section.s-power{--accent:var(--copper)}
+section.s-mech{--accent:var(--brass)}
+section.s-support{--accent:var(--slate)}
+h2{font-family:var(--mono); font-size:11px; font-weight:600;
+  letter-spacing:.16em; text-transform:uppercase; color:var(--accent);
+  margin:52px 0 20px; padding-bottom:9px; border-bottom:2px solid var(--accent);
+  display:flex; align-items:center; gap:9px}
+h2::before{content:""; width:9px; height:9px; background:var(--accent);
+  border-radius:2px; flex:none}
+.item{margin:0 0 22px; padding-left:14px; border-left:2px solid var(--accent)}
+.item h3{color:var(--ink)}
+.item h3{font-size:16px; font-weight:var(--weight); margin:0 0 2px; display:inline}
+.tag{font-family:var(--mono); font-size:10.5px; color:var(--accent);
+  letter-spacing:.05em; margin-left:8px; white-space:nowrap}
+.item p{margin:2px 0 0; color:var(--dim); font-size:15px; line-height:1.6}
+.sub{font-family:var(--mono); font-size:10.5px; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--accent); opacity:.85; margin:32px 0 14px}
+.mini{margin:0 0 9px; font-size:14.5px; color:var(--dim); padding-left:14px;
+  position:relative}
+.mini::before{content:""; position:absolute; left:0; top:11px; width:6px; height:2px;
+  background:var(--accent); opacity:.7}
+.mini b{color:var(--ink); font-weight:var(--weight)}
+.skills{margin:0; padding:0; list-style:none}
+.skills li{margin-bottom:12px; font-size:15px; color:var(--dim)}
+.skills li{padding-left:14px; border-left:2px solid var(--line)}
+.skills li:nth-child(1),.skills li:nth-child(2),.skills li:nth-child(3){border-color:var(--green)}
+.skills li:nth-child(4),.skills li:nth-child(5){border-color:var(--copper)}
+.skills li:nth-child(6){border-color:var(--brass)}
+.skills li:nth-child(7){border-color:var(--steel)}
+.skills li:nth-child(8){border-color:var(--slate)}
+.skills b{display:block; color:var(--ink); font-weight:var(--weight); font-size:13px;
+  font-family:var(--mono); letter-spacing:.03em; margin-bottom:1px}
+.contact{margin:0; padding:0; list-style:none}
+.contact li{margin-bottom:8px; font-size:15px}
+.contact a{color:var(--ink); text-decoration:none; border-bottom:1px solid var(--copper)}
+.contact a:hover{color:var(--copper)}
+.contact li:nth-child(2) a{border-color:var(--green)}
+.contact li:nth-child(3) a{border-color:var(--steel)}
+.contact li:nth-child(4) a{border-color:var(--brass)}
+.contact span{font-family:var(--mono); font-size:11px; color:var(--dim);
+  letter-spacing:.08em; text-transform:uppercase; margin-right:10px; display:inline-block;
+  min-width:70px}
+footer{margin-top:56px; padding-top:16px; border-top:1px solid var(--line);
+  font-family:var(--mono); font-size:11px; color:var(--dim)}
+:focus-visible{outline:2px solid var(--copper); outline-offset:2px}
+
+/* ---------- expandable project detail ---------- */
+details.item{padding-left:42px}
+details.item summary{list-style:none; cursor:pointer; display:block; padding-right:22px}
+details.item summary::-webkit-details-marker{display:none}
+details.item summary:hover h3{color:var(--accent)}
+.chev{position:absolute; right:2px; top:7px; width:7px; height:7px;
+  border-right:1.5px solid var(--dim); border-bottom:1.5px solid var(--dim);
+  transform:rotate(45deg); transition:transform .25s ease, border-color .25s ease}
+details[open] .chev{transform:rotate(-135deg); border-color:var(--accent)}
+details.item summary:hover .chev{border-color:var(--accent)}
+.detail{margin:12px 0 4px; border-top:1px solid var(--line); padding-top:12px}
+.detail .row{display:grid; grid-template-columns:78px 1fr; gap:12px; margin-bottom:9px}
+.detail dt{font-family:var(--mono); font-size:10px; letter-spacing:.11em; text-transform:uppercase;
+  color:var(--accent); padding-top:3px}
+.detail dd{margin:0; font-size:14.5px; color:var(--dim); line-height:1.55}
+.todo{font-style:italic; opacity:.75}
+@media(max-width:520px){
+  .detail .row{grid-template-columns:1fr; gap:2px; margin-bottom:12px}
+  .detail dt{padding-top:0}
+}
+
+
+/* ---------- project & section symbols ---------- */
+.item{position:relative; padding-left:42px}
+.ico{position:absolute; left:13px; top:1px; width:19px; height:19px;
+  fill:none; stroke:var(--accent); stroke-width:1.5;
+  stroke-linecap:round; stroke-linejoin:round; opacity:.95}
+h2 svg{width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:1.6;
+  stroke-linecap:round; stroke-linejoin:round; flex:none}
+h2::before{display:none}
+@media(max-width:420px){.item{padding-left:36px} .ico{left:10px; width:17px; height:17px}}
+
+
+/* ---------- day / night switch ---------- */
+.theme{position:fixed; top:20px; right:20px; z-index:5;
+  display:flex; align-items:center; gap:8px;
+  background:none; border:1px solid var(--line); border-radius:100px;
+  padding:7px 13px 7px 10px; cursor:pointer; color:var(--dim);
+  font-family:var(--mono); font-size:10.5px; letter-spacing:.12em; text-transform:uppercase;
+  transition:color .3s, border-color .3s}
+.theme:hover{color:var(--ink); border-color:var(--accent)}
+.theme svg{width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:1.6;
+  stroke-linecap:round; flex:none}
+.theme .moon{display:none}
+html[data-theme="light"] .theme .sun{display:none}
+html[data-theme="light"] .theme .moon{display:block}
+@media(max-width:520px){.theme{top:12px; right:12px; padding:7px 10px}
+  .theme .label{display:none}}
+
+/* slow day <-> night crossfade — about two seconds, no hard flip */
+body{transition:background-color 1.9s cubic-bezier(.4,0,.2,1)}
+section,.item,.skills li,footer,.theme,.band i,h2,.deco-svg g{
+  transition:border-color 1.9s cubic-bezier(.4,0,.2,1),
+    stroke 1.9s cubic-bezier(.4,0,.2,1),
+    fill 1.9s cubic-bezier(.4,0,.2,1),
+    opacity 1.9s cubic-bezier(.4,0,.2,1)}
+
+/* the change rolls down the page: each section turns a beat after the one above */
+section:nth-of-type(1){transition-delay:.10s}
+section:nth-of-type(2){transition-delay:.20s}
+section:nth-of-type(3){transition-delay:.30s}
+section:nth-of-type(4){transition-delay:.40s}
+section:nth-of-type(5){transition-delay:.50s}
+section:nth-of-type(6){transition-delay:.60s}
+section:nth-of-type(7){transition-delay:.70s}
+.deco-svg g{transition-delay:.25s}
+
+/* text turns over quickly at the halfway mark, while the page is mid-tone —
+   fading it slowly would drag every word through a moment of no contrast */
+h1,h2,h3,p,li,a,span,b,footer,.role,.tag,.sub{
+  transition:color .45s linear .8s}
+.theme{transition:color .45s linear .8s, border-color 1.9s cubic-bezier(.4,0,.2,1),
+  opacity .4s ease}
+
+/* a slow band of light travelling across, like the sun going down */
+.sweep{position:fixed; inset:-30% -60%; z-index:4; pointer-events:none; opacity:0;
+  background:linear-gradient(115deg, transparent 30%, var(--accent) 50%, transparent 70%)}
+.sweep.on{animation:sweep 2.2s cubic-bezier(.36,0,.25,1)}
+@keyframes sweep{
+  0%{opacity:0; transform:translate3d(-38%,-22%,0)}
+  30%{opacity:.10}
+  62%{opacity:.10}
+  100%{opacity:0; transform:translate3d(38%,22%,0)}
+}
+.theme.busy{opacity:.5; pointer-events:none}
+
+@media(prefers-reduced-motion:reduce){
+  body,section,.item,.skills li,footer,.theme,.band i,h2,.deco-svg g,
+  h1,h3,p,li,a,span,b,.role,.tag,.sub{
+    transition:background-color .3s linear, color .3s linear, border-color .3s linear;
+    transition-delay:0s}
+  .sweep.on{animation:none}
+}
+
+
+/* ---------- background: gears, traces, leaves ---------- */
+.deco{position:fixed; top:0; bottom:0; width:170px; pointer-events:none; z-index:0;
+  overflow:hidden}
+.deco-l{left:0; -webkit-mask-image:linear-gradient(to right,#000 55%,transparent 100%);
+  mask-image:linear-gradient(to right,#000 55%,transparent 100%)}
+.deco-r{right:0; -webkit-mask-image:linear-gradient(to left,#000 55%,transparent 100%);
+  mask-image:linear-gradient(to left,#000 55%,transparent 100%)}
+.deco-svg{width:100%; height:100%; display:block}
+.deco-svg g{fill:none; stroke-linecap:round; stroke-linejoin:round}
+.ln-mech{stroke:var(--brass); stroke-width:1.2; opacity:var(--art-mech)}
+.ln-trace{stroke:var(--copper); stroke-width:1.6; opacity:var(--art-trace)}
+.ln-pad{stroke:var(--copper); stroke-width:1.6; fill:var(--paper); opacity:var(--art-pad)}
+.ln-leaf{stroke:var(--green); stroke-width:1.2; opacity:var(--art-leaf)}
+body>h1,body>.role,body>.band,body>.intro,body>section,body>footer{position:relative; z-index:1}
+@media(max-width:1040px){.deco{display:none}}
+@media(prefers-reduced-motion:no-preference){
+  .deco-svg{animation:deco-in 1.2s ease both}
+  @keyframes deco-in{from{opacity:0}to{opacity:1}}
+}
+
+</style>
 </head>
 <body>
-  <header>
-    <h1>Rainbow Website</h1>
-  </header>
-  <button id="party-button">Party Popper!</button>
-  <div id="confetti-container"></div>
-  <div class="content">
-    <div class="clock">
-      <h2>Digital Clock</h2>
-      <div id="digital-clock"></div>
-    </div>
+<svg class="sprite" aria-hidden="true" style="display:none">
+<defs>
+<symbol id="i-chip" viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="1"/><path d="M10 4v3M14 4v3M10 17v3M14 17v3M4 10h3M4 14h3M17 10h3M17 14h3"/></symbol>
+<symbol id="i-code" viewBox="0 0 24 24"><path d="M8.5 8 4.5 12l4 4M15.5 8l4 4-4 4M13.4 5.5l-2.8 13"/></symbol>
+<symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13.2 3 5.5 13.4h5.1L10.2 21l7.9-10.5h-5.2z"/></symbol>
+<symbol id="i-gear" viewBox="0 0 24 24"><path d="M19.4 12.0 L21.9 13.3 L21.6 14.6 L18.8 14.8 L17.2 17.2 L18.1 19.9 L17.0 20.7 L14.8 18.8 L12.0 19.4 L10.7 21.9 L9.4 21.6 L9.2 18.8 L6.8 17.2 L4.1 18.1 L3.3 17.0 L5.2 14.8 L4.6 12.0 L2.1 10.7 L2.4 9.4 L5.2 9.2 L6.8 6.8 L5.9 4.1 L7.0 3.3 L9.2 5.2 L12.0 4.6 L13.3 2.1 L14.6 2.4 L14.8 5.2 L17.2 6.8 L19.9 5.9 L20.7 7.0 L18.8 9.2 Z"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="i-tools" viewBox="0 0 24 24"><path d="M15.6 3.4a5 5 0 0 0-4 7.7L4.2 18.5a1.8 1.8 0 0 0 2.6 2.6l7.4-7.4a5 5 0 0 0 6.4-6.6l-2.9 2.9-2.8-.7-.7-2.8z"/></symbol>
+<symbol id="i-flow" viewBox="0 0 24 24"><path d="M12 3.5c3.4 3.6 5.4 6.3 5.4 8.9A5.4 5.4 0 0 1 6.6 12.4c0-2.6 2-5.3 5.4-8.9z"/><path d="M9.6 13.6a2.7 2.7 0 0 0 2.7 2.6"/></symbol>
+<symbol id="i-temp" viewBox="0 0 24 24"><path d="M14 13.6V5a2 2 0 1 0-4 0v8.6a4 4 0 1 0 4 0z"/><path d="M12 9.5v5.6"/></symbol>
+<symbol id="i-signal" viewBox="0 0 24 24"><circle cx="12" cy="17.5" r="1.6"/><path d="M8.4 14.4a5 5 0 0 1 7.2 0M5.4 11.2a9.3 9.3 0 0 1 13.2 0M2.6 8a13.4 13.4 0 0 1 18.8 0"/></symbol>
+<symbol id="i-gauge" viewBox="0 0 24 24"><path d="M3.6 17a9 9 0 1 1 16.8 0"/><path d="M12 17l4.2-5.4"/><circle cx="12" cy="17" r="1.4"/></symbol>
+<symbol id="i-display" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="1.5"/><path d="M7 10v4M11 10v4M15 10h2M15 14h2"/></symbol>
+<symbol id="i-motor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><path d="M9 15V9l3 4 3-4v6M12 5V2.5M12 21.5V19"/></symbol>
+<symbol id="i-pulse" viewBox="0 0 24 24"><path d="M2.8 12h4l2-4.4 3 9.4 2.4-6 1.6 3h5.4"/></symbol>
+<symbol id="i-doc" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></symbol>
+<symbol id="i-scan" viewBox="0 0 24 24"><path d="M4 8V5h3M20 8V5h-3M4 16v3h3M20 16v3h-3"/><path d="M4.5 12h15"/></symbol>
+<symbol id="i-screen" viewBox="0 0 24 24"><rect x="2.5" y="4.5" width="19" height="12" rx="1.5"/><path d="M8.5 20h7M12 16.5V20"/></symbol>
+<symbol id="i-switch" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="19" cy="7.5" r="1.6"/><circle cx="19" cy="16.5" r="1.6"/><path d="M6.6 12 17.6 8"/><path d="M9 12h8.4"/></symbol>
+<symbol id="i-solar" viewBox="0 0 24 24"><path d="M3.5 15.5 6 6.5h12l2.5 9z"/><path d="M4.8 11.4h14.4M11 6.5v9M20.5 15.5v3M3.5 15.5v3"/></symbol>
+<symbol id="i-fan" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M12 10c0-3.6.9-5.6 2.6-5.6 1.4 0 2 1.6.8 3.4-.8 1.2-2 2-3.4 2.2M14 12c3.6 0 5.6.9 5.6 2.6 0 1.4-1.6 2-3.4.8-1.2-.8-2-2-2.2-3.4M10 14c0 3.6-.9 5.6-2.6 5.6-1.4 0-2-1.6-.8-3.4.8-1.2 2-2 3.4-2.2M10 12c-3.6 0-5.6-.9-5.6-2.6 0-1.4 1.6-2 3.4-.8 1.2.8 2 2 2.2 3.4"/></symbol>
+</defs>
+</svg>
 
-    <div class="calendar">
-      <h2>Calendar</h2>
-      <div id="calendar"></div>
-    </div>
+<button class="theme" id="themeBtn" type="button" aria-pressed="false"
+  aria-label="Switch between day and night">
+  <svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/>
+    <path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6"/></svg>
+  <svg class="moon" viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M20.5 14.6A8.6 8.6 0 0 1 9.4 3.5a8.6 8.6 0 1 0 11.1 11.1z"/></svg>
+  <span class="label">Night</span>
+</button>
+<div class="sweep" id="sweep" aria-hidden="true"></div>
 
-    <div class="contact">
-      <h2>Contact Details</h2>
-      <ul>
-        <li>Email: contact@example.com</li>
-        <li>Phone: 123-456-7890</li>
-        <li>Address: 123 Rainbow Street, City</li>
-      </ul>
-    </div>
-  </div>
+<div class="deco deco-l"><svg class="deco-svg" viewBox="0 0 160 900" preserveAspectRatio="xMinYMid slice" aria-hidden="true">
+  <g class="ln-mech">
+    <path d="M118.0 120.0 L131.9 123.1 L131.3 128.9 L117.0 128.9 L114.0 137.4 L125.2 146.2 L122.1 151.1 L109.3 144.9 L102.9 151.3 L109.1 164.1 L104.2 167.2 L95.4 156.0 L86.9 159.0 L86.9 173.3 L81.1 173.9 L78.0 160.0 L69.1 159.0 L62.9 171.9 L57.4 169.9 L60.6 156.0 L53.1 151.3 L41.9 160.2 L37.8 156.1 L46.7 144.9 L42.0 137.4 L28.1 140.6 L26.1 135.1 L39.0 128.9 L38.0 120.0 L24.1 116.9 L24.7 111.1 L39.0 111.1 L42.0 102.6 L30.8 93.8 L33.9 88.9 L46.7 95.1 L53.1 88.7 L46.9 75.9 L51.8 72.8 L60.6 84.0 L69.1 81.0 L69.1 66.7 L74.9 66.1 L78.0 80.0 L86.9 81.0 L93.1 68.1 L98.6 70.1 L95.4 84.0 L102.9 88.7 L114.1 79.8 L118.2 83.9 L109.3 95.1 L114.0 102.6 L127.9 99.4 L129.9 104.9 L117.0 111.1 Z"/><circle cx="78" cy="120" r="17"/><circle cx="78" cy="120" r="5"/>
+    <path d="M65.0 470.0 L73.9 472.5 L73.2 477.1 L64.0 477.0 L61.0 483.5 L67.2 490.5 L64.1 494.0 L56.4 488.9 L50.4 492.7 L51.8 501.9 L47.3 503.2 L43.6 494.7 L36.4 494.7 L32.7 503.2 L28.2 501.9 L29.6 492.7 L23.6 488.9 L15.9 494.0 L12.8 490.5 L19.0 483.5 L16.0 477.0 L6.8 477.1 L6.1 472.5 L15.0 470.0 L16.0 463.0 L8.2 458.0 L10.1 453.8 L19.0 456.5 L23.6 451.1 L19.7 442.7 L23.6 440.2 L29.6 447.3 L36.4 445.3 L37.7 436.1 L42.3 436.1 L43.6 445.3 L50.4 447.3 L56.4 440.2 L60.3 442.7 L56.4 451.1 L61.0 456.5 L69.9 453.8 L71.8 458.0 L64.0 463.0 Z"/><circle cx="40" cy="470" r="11"/>
+  </g>
+  <g class="ln-trace">
+    <path d="M110 -10 L110 210 L142 242 L142 380 L110 412 L110 640 L140 670 L140 910"/>
+    <path d="M62 250 L62 330 L96 364 L96 560"/>
+  </g>
+  <g class="ln-pad">
+    <circle cx="110" cy="210" r="5"/><circle cx="142" cy="380" r="5"/>
+    <circle cx="110" cy="640" r="5"/><circle cx="96" cy="560" r="4"/>
+    <circle cx="62" cy="250" r="4"/>
+  </g>
+  <g class="ln-leaf">
+    <path d="M24.0 690.0 C67.2 677.4 76.1 637.7 74.9 608.6 C48.2 620.2 16.4 645.6 24.0 690.0 Z"/><path d="M24.0 690.0 L74.9 608.6"/><path d="M36.7 669.6 L55.5 663.3"/><path d="M36.7 669.6 L34.2 649.9"/><path d="M46.9 653.4 L65.7 647.0"/><path d="M46.9 653.4 L44.3 633.7"/><path d="M57.1 637.1 L75.9 630.7"/><path d="M57.1 637.1 L54.5 617.4"/>
+  </g>
+</svg></div>
+<div class="deco deco-r"><svg class="deco-svg" viewBox="0 0 160 900" preserveAspectRatio="xMaxYMid slice" aria-hidden="true">
+  <g class="ln-mech">
+    <path d="M186.0 300.0 L207.9 304.0 L207.3 311.3 L185.0 311.5 L182.0 322.6 L201.2 333.8 L198.1 340.5 L177.2 333.0 L170.6 342.4 L184.8 359.6 L179.6 364.8 L162.4 350.6 L153.0 357.2 L160.5 378.1 L153.8 381.2 L142.6 362.0 L131.5 365.0 L131.3 387.3 L124.0 387.9 L120.0 366.0 L108.5 365.0 L100.8 385.9 L93.7 384.0 L97.4 362.0 L87.0 357.2 L72.6 374.1 L66.6 369.9 L77.6 350.6 L69.4 342.4 L50.1 353.4 L45.9 347.4 L62.8 333.0 L58.0 322.6 L36.0 326.3 L34.1 319.2 L55.0 311.5 L54.0 300.0 L32.1 296.0 L32.7 288.7 L55.0 288.5 L58.0 277.4 L38.8 266.2 L41.9 259.5 L62.8 267.0 L69.4 257.6 L55.2 240.4 L60.4 235.2 L77.6 249.4 L87.0 242.8 L79.5 221.9 L86.2 218.8 L97.4 238.0 L108.5 235.0 L108.7 212.7 L116.0 212.1 L120.0 234.0 L131.5 235.0 L139.2 214.1 L146.3 216.0 L142.6 238.0 L153.0 242.8 L167.4 225.9 L173.4 230.1 L162.4 249.4 L170.6 257.6 L189.9 246.6 L194.1 252.6 L177.2 267.0 L182.0 277.4 L204.0 273.7 L205.9 280.8 L185.0 288.5 Z"/><circle cx="120" cy="300" r="28"/><circle cx="120" cy="300" r="8"/>
+    <path d="M79.0 640.0 L89.9 642.9 L89.2 648.1 L77.9 648.0 L74.8 655.5 L82.9 663.4 L79.6 667.6 L69.9 661.9 L63.5 666.8 L66.5 677.7 L61.6 679.7 L56.0 669.9 L48.0 671.0 L45.1 681.9 L39.9 681.2 L40.0 669.9 L32.5 666.8 L24.6 674.9 L20.4 671.6 L26.1 661.9 L21.2 655.5 L10.3 658.5 L8.3 653.6 L18.1 648.0 L17.0 640.0 L6.1 637.1 L6.8 631.9 L18.1 632.0 L21.2 624.5 L13.1 616.6 L16.4 612.4 L26.1 618.1 L32.5 613.2 L29.5 602.3 L34.4 600.3 L40.0 610.1 L48.0 609.0 L50.9 598.1 L56.1 598.8 L56.0 610.1 L63.5 613.2 L71.4 605.1 L75.6 608.4 L69.9 618.1 L74.8 624.5 L85.7 621.5 L87.7 626.4 L77.9 632.0 Z"/><circle cx="48" cy="640" r="13"/>
+  </g>
+  <g class="ln-trace">
+    <path d="M28 -10 L28 150 L58 180 L58 430 L26 462 L26 700 L56 730 L56 910"/>
+    <path d="M96 470 L96 560 L64 592 L64 760"/>
+  </g>
+  <g class="ln-pad">
+    <circle cx="28" cy="150" r="5"/><circle cx="58" cy="430" r="5"/>
+    <circle cx="26" cy="700" r="5"/><circle cx="96" cy="470" r="4"/>
+    <circle cx="64" cy="760" r="4"/>
+  </g>
+  <g class="ln-leaf">
+    <path d="M126.0 96.0 C75.9 104.9 61.4 148.3 59.5 181.1 C90.9 171.3 129.5 146.7 126.0 96.0 Z"/><path d="M126.0 96.0 L59.5 181.1"/><path d="M109.4 117.3 L87.5 122.1"/><path d="M109.4 117.3 L110.0 139.7"/><path d="M96.1 134.3 L74.2 139.1"/><path d="M96.1 134.3 L96.7 156.7"/><path d="M82.8 151.3 L60.9 156.1"/><path d="M82.8 151.3 L83.4 173.7"/>
+    <path d="M140.0 800.0 C104.2 790.7 81.9 815.3 71.1 836.6 C94.8 839.6 127.6 834.9 140.0 800.0 Z"/><path d="M140.0 800.0 L71.1 836.6"/><path d="M122.8 809.2 L106.8 805.7"/><path d="M122.8 809.2 L116.7 824.3"/><path d="M109.0 816.5 L93.1 813.1"/><path d="M109.0 816.5 L102.9 831.6"/><path d="M95.2 823.8 L79.3 820.4"/><path d="M95.2 823.8 L89.1 838.9"/>
+  </g>
+</svg></div>
 
-  <footer>
-    <p>&copy; 2023 Rainbow Website. All rights reserved.</p>
-  </footer>
 
-  <script src="script.js"></script>
+<h1>Ahmed</h1>
+<p class="role">Embedded systems &amp; electronics — Lahore, Pakistan</p>
+<div class="band" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
 
+<p class="intro">I build the whole product: schematic, firmware, enclosure, and the hardware it
+mounts in. Self-taught, with a machine shop behind the bench.</p>
+<p class="intro">Available for freelance work and embedded roles, local or remote.</p>
+<p class="intro hint">Tap any project for the parts, the firmware and what was tricky.</p>
+
+<section class="s-embed">
+<h2><svg><use href="#i-chip"/></svg>Embedded systems</h2>
+
+<details class="item">
+  <summary><svg class="ico"><use href="#i-flow"/></svg><h3>Industrial fuel flow meter</h3><span class="tag">Built · industrial client</span><p>Fuel flow monitoring instrument built for an industrial client — sensor interfacing,
+  measurement firmware and enclosure, delivered as a working unit.</p>
+  <span class="chev" aria-hidden="true"></span></summary>
+  <div class="detail"><div class="row"><dt>Hardware</dt><dd>Fuel flow sensor · measurement board · field enclosure · operator readout</dd></div><div class="row"><dt>Firmware</dt><dd>Embedded C/C++ · pulse acquisition · pulse-to-flow conversion · totaliser display</dd></div><div class="row"><dt>Pin map</dt><dd><span class="todo">Not documented in your records — add yours here.</span></dd></div><div class="row"><dt>Notes</dt><dd>Built for an industrial environment rather than a bench: the enclosure, the readout and the wiring all had to survive the site and be usable by an operator with no instructions.</dd></div></div>
+</details>
+
+<details class="item">
+  <summary><svg class="ico"><use href="#i-temp"/></svg><h3>Smart climate control system</h3><span class="tag">Delivered</span><p>Reads temperature and humidity, then drives an ordinary split AC through its own IR
+  protocol. Decoded the Midea 48-bit remote on a logic analyzer and rebuilt the codes.</p>
+  <span class="chev" aria-hidden="true"></span></summary>
+  <div class="detail"><div class="row"><dt>Hardware</dt><dd>Arduino Nano · HDC1080 (I²C) · DHT sensor · IR transmitter LED · LCD · DIP switches</dd></div><div class="row"><dt>Firmware</dt><dd>Tick-based finite state machine · Midea 48-bit IR protocol · Pronto hex arrays</dd></div><div class="row"><dt>Pin map</dt><dd>HDC1080 sits on I²C, which is fixed to A4/A5 on a Nano. Confirm the rest against your build.</dd></div><div class="row"><dt>Notes</dt><dd>The IR side was reverse-engineered, not copied from a library. The remote's output was captured on a logic analyzer, decoded in PulseView, and rebuilt as Pronto arrays — which made it possible to generate temperature and mode commands the original remote never sent.</dd></div></div>
+</details>
+
+<details class="item">
+  <summary><svg class="ico"><use href="#i-signal"/></svg><h3>Nurse calling system</h3><span class="tag">Prototype tested</span><p>ESP32 master station handling calls from multiple room nodes over ESP-NOW — no router
+  needed, so it keeps working when the building network is down.</p>
+  <span class="chev" aria-hidden="true"></span></summary>
+  <div class="detail"><div class="row"><dt>Hardware</dt><dd>ESP32 · WS2812 addressable LEDs · push-button call inputs · buzzer</dd></div><div class="row"><dt>Firmware</dt><dd>ESP-NOW peer handling · per-node call state · dynamic LED status logic</dd></div><div class="row"><dt>Pin map</dt><dd><span class="todo">Not documented in your records — add yours here.</span></dd></div><div class="row"><dt>Notes</dt><dd>ESP-NOW was chosen over WiFi deliberately: no router, no DHCP, no association delay, so a press reaches the station in milliseconds and the system survives a building network outage. Worth checking on any rebuild: WS2812 data expects 5 V logic while the ESP32 drives 3.3 V, so a level shifter or a first sacrificial LED is usually needed.</dd></div></div>
+</details>
+
+<details class="item">
+  <summary><svg class="ico"><use href="#i-gauge"/></svg><h3>Motorcycle dyno</h3><span class="tag">In development</span><p>Machined roller set with a 21-hole optical encoder, streaming live RPM and wheel speed
+  to a phone dashboard over Bluetooth.</p>
+  <span class="chev" aria-hidden="true"></span></summary>
+  <div class="detail"><div class="row"><dt>Hardware</dt><dd>Arduino Nano · HC-05 Bluetooth · 21-hole optical disc encoder · 220 mm and 170 mm rollers</dd></div><div class="row"><dt>Firmware</dt><dd>Interrupt-driven pulse counting · non-blocking telemetry loop · Virtuino dashboard</dd></div><div class="row"><dt>Pin map</dt><dd>Pulse input has to sit on an interrupt-capable pin — D2 or D3 on a Nano.</dd></div><div class="row"><dt>Notes</dt><dd>21 holes give 21 edges per revolution, so wheel speed resolves finely enough to tell runs apart instead of just reporting a peak. Counting is done in an ISR and the maths outside it — doing the division inside the interrupt loses counts at high RPM.</dd></div></div>
+</details>
+
+<details class="item">
+  <summary><svg class="ico"><use href="#i-display"/></svg><h3>Multi-mode automation controller</h3><span class="tag">Built</span><p>Arduino Nano controller switching a mains load through several modes, with a 4-digit
+  readout, debounced mode cycling and a Do-Not-Disturb mode.</p>
+  <span class="chev" aria-hidden="true"></span></summary>
+  <div class="detail"><div class="row"><dt>Hardware</dt><dd>Arduino Nano · TM1637 4-digit display · solid-state relay · push buttons · active buzzer</dd></div><div class="row"><dt>Firmware</dt><dd>Named-state FSM · software debouncing · modulo mode cycling · timed output · DND flag</dd></div><div class="row"><dt>Pin map</dt><dd>TM1637 needs two GPIO (CLK and DIO) — any pair, not hardware I²C despite looking like it.</dd></div><div class="row"><dt>Notes</dt><dd>Modes are named states, not integers, so adding a mode doesn't mean rewriting the input handling. Debouncing is in software with state-change detection rather than a delay, which is what stops one press registering as three.</dd></div></div>
+</details>
+
+<details class="item">
+  <summary><svg class="ico"><use href="#i-motor"/></svg><h3>Treadmill controller</h3><span class="tag">Built</span><p>State machine with named states for each pace phase, plus PIR motion sensing that shuts
+  the belt down when nobody is on it.</p>
+  <span class="chev" aria-hidden="true"></span></summary>
+  <div class="detail"><div class="row"><dt>Hardware</dt><dd>Arduino · PIR motion sensor · motor drive interface · control panel</dd></div><div class="row"><dt>Firmware</dt><dd>States: STOP · SLOW · FAST · HIGH_PACE_PHASE · COOL_DOWN · PIR_INACTIVE</dd></div><div class="row"><dt>Pin map</dt><dd><span class="todo">Not documented in your records — add yours here.</span></dd></div><div class="row"><dt>Notes</dt><dd>Named states make the transition table read as behaviour instead of magic numbers. PIR modules have a retrigger jumper and an adjustable hold time — the inactivity timeout has to be longer than that hold or the belt cuts out on a walker standing still.</dd></div></div>
+</details>
+
+<details class="item">
+  <summary><svg class="ico"><use href="#i-pulse"/></svg><h3>ESP32 BLE heart rate client</h3><span class="tag">Built</span><p>NimBLE client for a Magene chest strap that reconnects on its own when the link drops.</p>
+  <span class="chev" aria-hidden="true"></span></summary>
+  <div class="detail"><div class="row"><dt>Hardware</dt><dd>ESP32 · Magene BLE chest strap</dd></div><div class="row"><dt>Firmware</dt><dd>NimBLE-Arduino GATT client · heart rate notification subscribe · auto-reconnect</dd></div><div class="row"><dt>Pin map</dt><dd><span class="todo">Not documented in your records — add yours here.</span></dd></div><div class="row"><dt>Notes</dt><dd>NimBLE was used instead of the stock BLE stack for the smaller memory footprint. Reconnection is treated as normal operation, not an error: the client re-scans and re-subscribes without a reset when the strap goes out of range.</dd></div></div>
+</details>
+
+<p class="sub">Sensor &amp; platform work</p>
+<p class="mini"><b>Load cells &amp; strain gauges</b> — Wheatstone-bridge sensing, amplification and calibration to real force values.</p>
+<p class="mini"><b>Pressure &amp; differential pressure</b> — DSC-6B and similar sensors, acquisition and conversion to engineering units.</p>
+<p class="mini"><b>Diesel particulate filter monitoring</b> — differential pressure across a DPF as an indicator of exhaust restriction.</p>
+<p class="mini"><b>Capacitive soil moisture</b> — HW-330 module, ADC acquisition and threshold detection for irrigation control.</p>
+<p class="mini"><b>ESP32 + PS4 controller</b> — wireless gamepad input over Bluetooth; traced a Bluetooth stack linker fault to a library version mismatch.</p>
+<p class="mini"><b>ESP32-C3</b> — compact wireless platform evaluated for connected builds.</p>
+<p class="mini"><b>ATtiny85</b> — low-cost MCU for jobs where an Arduino board is more chip than the product needs.</p>
+<p class="mini"><b>STM8S003F3P6</b> — cheap MCU option for cost-sensitive production runs.</p>
+
+</section>
+
+<section class="s-code">
+<h2><svg><use href="#i-code"/></svg>Programming &amp; automation</h2>
+
+<details class="item">
+  <summary><svg class="ico"><use href="#i-doc"/></svg><h3>Web scraping &amp; PDF consolidation</h3><span class="tag">Built</span><p>Python tool that walks a site's XML sitemap, downloads scattered stencil files and merges
+  them into single PDFs. Requests, lxml and PyPDF2.</p>
+  <span class="chev" aria-hidden="true"></span></summary>
+  <div class="detail"><div class="row"><dt>Hardware</dt><dd>PC</dd></div><div class="row"><dt>Firmware</dt><dd>Python · Requests · lxml · PyPDF2 · XML sitemap parsing</dd></div><div class="row"><dt>Pin map</dt><dd><span class="todo">Not documented in your records — add yours here.</span></dd></div><div class="row"><dt>Notes</dt><dd>Written because the source files were spread over hundreds of pages with no index. The sitemap is parsed with lxml, links are fetched with Requests, and PyPDF2 merges the results into single documents.</dd></div></div>
+</details>
+
+<details class="item">
+  <summary><svg class="ico"><use href="#i-scan"/></svg><h3>Metal price OCR extractor</h3><span class="tag">Built</span><p>Fully offline script that cleans up scanned rate sheets in Pillow, then pulls the numbers
+  out with Tesseract. No API, no upload, no per-request cost.</p>
+  <span class="chev" aria-hidden="true"></span></summary>
+  <div class="detail"><div class="row"><dt>Hardware</dt><dd>PC</dd></div><div class="row"><dt>Firmware</dt><dd>Python · Tesseract OCR · Pillow pre-processing</dd></div><div class="row"><dt>Pin map</dt><dd><span class="todo">Not documented in your records — add yours here.</span></dd></div><div class="row"><dt>Notes</dt><dd>Runs fully offline — no API, no upload, no per-request cost. The Pillow pre-processing step is what makes it work: raw scans of rate sheets OCR badly until the contrast and threshold are cleaned up first.</dd></div></div>
+</details>
+
+<details class="item">
+  <summary><svg class="ico"><use href="#i-screen"/></svg><h3>Android TV mirroring app</h3><span class="tag">Planned</span><p>Phone-to-TV mirroring over WiFi ADB with low enough latency to game on. Licensing checked
+  first — the approach is viable under Apache 2.0.</p>
+  <span class="chev" aria-hidden="true"></span></summary>
+  <div class="detail"><div class="row"><dt>Hardware</dt><dd>Android TV device · Android phone · WiFi network</dd></div><div class="row"><dt>Firmware</dt><dd>Android app · WiFi ADB · scrcpy approach · Apache 2.0</dd></div><div class="row"><dt>Pin map</dt><dd><span class="todo">Not documented in your records — add yours here.</span></dd></div><div class="row"><dt>Notes</dt><dd>Started as a practical problem — getting a phone onto a TV without lag — and went through scrcpy and hardware alternatives before landing on a TV-side app as the missing piece. Licensing was checked before any code: the approach is viable under Apache 2.0.</dd></div></div>
+</details>
+
+<p class="sub">Also worked with</p>
+<p class="mini"><b>scrcpy + ADB</b> — Android mirroring and remote control tuned to stay usable on older PCs.</p>
+<p class="mini"><b>WSL + Ubuntu</b> — Linux development environment set up against a hard disk-space limit.</p>
+<p class="mini"><b>PowerShell</b> — Windows automation and deployment scripting.</p>
+
+</section>
+
+<section class="s-power">
+<h2><svg><use href="#i-bolt"/></svg>Electrical &amp; power</h2>
+
+<details class="item">
+  <summary><svg class="ico"><use href="#i-switch"/></svg><h3>Three-source AC power changeover</h3><span class="tag">Delivered</span><p>Relay panel that transfers a load between three mains sources, with hardware interlocking
+  that makes phase shorting impossible. Optocoupler sensing keeps control isolated.</p>
+  <span class="chev" aria-hidden="true"></span></summary>
+  <div class="detail"><div class="row"><dt>Hardware</dt><dd>8-pin DPDT relays · time-delay relays · PC817 optocouplers · three-source AC input</dd></div><div class="row"><dt>Firmware</dt><dd>Hard-wired relay logic — no microcontroller in the safety path</dd></div><div class="row"><dt>Pin map</dt><dd><span class="todo">Not documented in your records — add yours here.</span></dd></div><div class="row"><dt>Notes</dt><dd>Source presence is sensed through optocouplers, so the control side stays galvanically isolated from mains. Transfer is break-before-make and the interlock is in the wiring, not in software — two sources physically cannot close at once, so a firmware bug can't short phases.</dd></div></div>
+</details>
+
+<details class="item">
+  <summary><svg class="ico"><use href="#i-solar"/></svg><h3>Inverter-free DC solar system</h3><span class="tag">In development</span><p>BLDC fans and DC lighting straight off a 24 V bank — no inverter losses. Panels sized with
+  thermal derating for Lahore summers, MPPT charging via a Tracer 1210A.</p>
+  <span class="chev" aria-hidden="true"></span></summary>
+  <div class="detail"><div class="row"><dt>Hardware</dt><dd>Tracer 1210A MPPT controller · 24 V AGM bank · PV array · BLDC fans · DC lighting</dd></div><div class="row"><dt>Firmware</dt><dd>Panel sizing with thermal derating · load budgeting · controller comparison</dd></div><div class="row"><dt>Pin map</dt><dd><span class="todo">Not documented in your records — add yours here.</span></dd></div><div class="row"><dt>Notes</dt><dd>No inverter in the load path, so the conversion losses disappear. Panels were sized on derated output for Lahore summer ambient, not nameplate rating — a panel at 45 °C doesn't produce the number on the sticker. Tracer 1012A and lithium storage were evaluated against this configuration.</dd></div></div>
+</details>
+
+<p class="sub">Design studies</p>
+<p class="mini"><b>12 V to 400 V conversion</b> — architecture for a ~1 kW high-voltage DC bus from a battery or solar source.</p>
+<p class="mini"><b>Li-ion packs</b> — cells and pack configurations compared by capacity, energy and fit for embedded power.</p>
+
+</section>
+
+<section class="s-mech">
+<h2><svg><use href="#i-gear"/></svg>Mechanical &amp; 3D</h2>
+
+<details class="item">
+  <summary><svg class="ico"><use href="#i-fan"/></svg><h3>Parametric AC vent</h3><span class="tag">Delivered</span><p>3D-printable vent whose blades move together through a linkage. Modelled in OpenSCAD so
+  every dimension is a variable; shipped with a browser 3D viewer.</p>
+  <span class="chev" aria-hidden="true"></span></summary>
+  <div class="detail"><div class="row"><dt>Hardware</dt><dd>3D-printed blades, linkage and housing</dd></div><div class="row"><dt>Firmware</dt><dd>OpenSCAD parametric model · single-file HTML/JavaScript 3D viewer</dd></div><div class="row"><dt>Pin map</dt><dd><span class="todo">Not documented in your records — add yours here.</span></dd></div><div class="row"><dt>Notes</dt><dd>Every dimension is a variable, so the model regenerates for a different duct size without redrawing geometry. The linkage was solved so one control input sets all blade angles at once. Delivered with a browser viewer so the client needed nothing installed.</dd></div></div>
+</details>
+
+<details class="item">
+  <summary><svg class="ico"><use href="#i-tools"/></svg><h3>Machine shop work</h3><span class="tag">Ongoing</span><p>Lathe, welding, sheet metal and die making — enclosures, mounts and roller assemblies for
+  the electronics above, cut in-house instead of waiting on a shop.</p>
+  <span class="chev" aria-hidden="true"></span></summary>
+  <div class="detail"><div class="row"><dt>Hardware</dt><dd>Lathe · welder · sheet metal tooling · dies</dd></div><div class="row"><dt>Pin map</dt><dd><span class="todo">Not documented in your records — add yours here.</span></dd></div><div class="row"><dt>Notes</dt><dd>Enclosures, mounts, brackets and the dyno roller assembly are cut in-house. It removes the usual bottleneck where a finished board waits weeks on a fabrication shop.</dd></div></div>
+</details>
+
+<p class="sub">Automotive studies</p>
+<p class="mini"><b>CG125 fuel economy &amp; tuning</b> — carburetion, intake, exhaust and vibration trade-offs.</p>
+<p class="mini"><b>70cc / 125cc / 150cc comparison</b> — fuel consumption, power and tuning headroom.</p>
+<p class="mini"><b>Small-engine turbocharging</b> — airflow, fuelling and boost management feasibility.</p>
+<p class="mini"><b>Android Auto, Samsung DeX, DisplayLink</b> — phone-to-vehicle and external display integration.</p>
+
+</section>
+
+<section class="s-support">
+<h2><svg><use href="#i-tools"/></svg>Support services</h2>
+<p class="intro">Not my main work, but available if you need it: <b>Windows and Linux
+troubleshooting</b>, PC deployment and configuration, <b>hardware fault diagnosis and repair</b>,
+and VoIP router setup (PTCL / MicroSIP).</p>
+
+</section>
+
+<section class="s-mech">
+<h2><svg><use href="#i-display"/></svg>Skills</h2>
+<ul class="skills">
+  <li><b>Microcontrollers</b>Arduino · ESP32 / ESP32-C3 · ESP8266 · STM32 · STM8 · ATtiny85</li>
+  <li><b>Firmware</b>C/C++ · non-blocking state machines · interrupts · telemetry</li>
+  <li><b>Wireless</b>ESP-NOW · BLE (NimBLE) · Bluetooth Classic · WiFi · IR</li>
+  <li><b>Electronics</b>Altium · Proteus · PCB layout · relay &amp; SSR switching · mains isolation</li>
+  <li><b>Power</b>MPPT controllers · battery banks · PV sizing · load budgeting</li>
+  <li><b>Mechanical</b>OpenSCAD · FreeCAD · PowerShape · lathe · welding · sheet metal · die making</li>
+  <li><b>Software</b>Python · OCR &amp; scraping · PowerShell · HTML/JavaScript</li>
+  <li><b>Test</b>Logic analyzer · PulseView · protocol decoding</li>
+</ul>
+
+</section>
+
+<section class="s-power">
+<h2><svg><use href="#i-signal"/></svg>Contact</h2>
+<ul class="contact">
+  <li><span>Email</span><a href="mailto:amd858@gmail.com">amd858@gmail.com</a></li>
+  <li><span>GitHub</span><a href="https://github.com/amd858">github.com/amd858</a></li>
+</ul>
+
+</section>
+
+<footer>Lahore, Pakistan</footer>
+
+
+<script>
+(function(){
+  var root=document.documentElement, btn=document.getElementById('themeBtn'),
+      sweep=document.getElementById('sweep'), label=btn.querySelector('.label'), saved=null;
+  try{ saved=localStorage.getItem('theme'); }catch(e){}
+  var start = saved || 'dark';
+  apply(start,false);
+
+  function apply(mode,animate){
+    root.setAttribute('data-theme',mode);
+    btn.setAttribute('aria-pressed', mode==='light' ? 'true' : 'false');
+    label.textContent = mode==='dark' ? 'Day' : 'Night';
+    try{ localStorage.setItem('theme',mode); }catch(e){}
+    if(animate){
+      sweep.classList.remove('on'); void sweep.offsetWidth; sweep.classList.add('on');
+    }
+  }
+  var busy=false;
+  btn.addEventListener('click',function(){
+    if(busy) return;
+    busy=true; btn.classList.add('busy');
+    apply(root.getAttribute('data-theme')==='dark' ? 'light' : 'dark', true);
+    setTimeout(function(){ busy=false; btn.classList.remove('busy'); }, 2200);
+  });
+})();
+</script>
 </body>
 </html>
