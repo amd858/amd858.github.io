@@ -439,6 +439,11 @@ max_temp = <span class="c">20.2</span> + dip_offset;</pre>
     label.textContent=mode==='dark'?'Day':'Night';
     try{localStorage.setItem('theme',mode)}catch(e){}
   }
+  window.addEventListener('storage',function(e){
+    if(e.key==='theme' && e.newValue && e.newValue!==root.getAttribute('data-theme')){
+      apply(e.newValue,true);
+    }
+  });
   var busy=false;
   btn.addEventListener('click',function(){
     if(busy)return;

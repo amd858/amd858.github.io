@@ -457,6 +457,11 @@ body{transition:background-color .4s ease}h1,h2,h3,h4,p,a,code,pre,table,table t
     label.textContent=mode==='dark'?'Day':'Night';
     try{localStorage.setItem('theme',mode)}catch(e){}
   }
+  window.addEventListener('storage',function(e){
+    if(e.key==='theme' && e.newValue && e.newValue!==root.getAttribute('data-theme')){
+      apply(e.newValue,true);
+    }
+  });
   var busy=false;
   btn.addEventListener('click',function(){
     if(busy)return;
