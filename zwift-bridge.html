@@ -4,419 +4,398 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Zwift BLE Bridge — ESP32-C3 Dual-Mode Firmware</title>
-<meta name="description" content="ESP32-C3 dual-mode BLE firmware that bridges physical heart rate monitors to Zwift. Full technical documentation, hardware pinouts, BLE architecture, and deployment guide.">
+<meta name="description" content="ESP32-C3 firmware that bridges a physical BLE heart-rate strap into Zwift while re-broadcasting Running Speed & Cadence, with crash-hardened scanning and NeoPixel status feedback.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --font-display:"IBM Plex Sans Condensed","Arial Narrow",sans-serif;
+  --font-body:"IBM Plex Sans",-apple-system,"Segoe UI",sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,"Cascadia Code",monospace;
+  --code-bg:#171b22; --code-text:#dfe6ee; --code-dim:#7b8898; --code-accent:#ff8552; --code-rule:#2a323e;
   --accent:var(--steel);
 }
 html[data-theme="dark"]{
   color-scheme:dark;
-  --paper:#191C18;   --ink:#E2E0D4;   --dim:#A9AFA0;
+  --paper:#191C18; --ink:#E2E0D4; --dim:#A9AFA0;
   --line:rgba(226,224,212,.16);
-  --green:#57B48C;   --steel:#86AAC4; --copper:#D28B5A;
-  --brass:#C9A94F;   --slate:#9BA394;
-  --weight:500;
+  --green:#57B48C; --steel:#86AAC4; --copper:#D28B5A; --brass:#C9A94F; --slate:#9BA394;
+  --surface:#20241F; --surface-2:#262B22;
+  --ok:#57c795; --warn:#e3a53a;
 }
 html[data-theme="light"]{
   color-scheme:light;
-  --paper:#E9E7DD;   --ink:#1B1D14;   --dim:#4E5348;
+  --paper:#E9E7DD; --ink:#1B1D14; --dim:#4E5348;
   --line:rgba(27,29,20,.16);
-  --green:#0E5A3E;   --steel:#2E4A5E; --copper:#8F4A1E;
-  --brass:#6F5417;   --slate:#414A42;
-  --weight:600;
+  --green:#0E5A3E; --steel:#2E4A5E; --copper:#8F4A1E; --brass:#6F5417; --slate:#414A42;
+  --surface:#F5F3EA; --surface-2:#EFEDE1;
+  --ok:#227a52; --warn:#a3690a;
 }
-*{box-sizing:border-box}
-body{
-  margin:0 auto; max-width:640px; padding:64px 24px 80px;
-  background:var(--paper); color:var(--ink);
-  font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  font-size:16px; line-height:1.68; -webkit-font-smoothing:antialiased;
-  text-rendering:optimizeLegibility;
-}
-h1{font-size:1.5rem; font-weight:var(--weight); margin:0 0 4px; letter-spacing:.005em}
-.role{font-family:var(--mono); font-size:12.5px; letter-spacing:.05em;
-  color:var(--dim); margin:0 0 28px}
-.band{display:flex; height:5px; margin:0 0 26px; border-radius:2px; overflow:hidden}
-.band i{flex:1}
-.band i:nth-child(1){background:var(--steel)}
-.band i:nth-child(2){background:var(--copper)}
-.band i:nth-child(3){background:var(--brass)}
-.intro{margin:0 0 12px}
-section{margin:40px 0 0}
-h2{font-family:var(--mono); font-size:11px; font-weight:600;
-  letter-spacing:.16em; text-transform:uppercase; color:var(--accent);
-  margin:32px 0 16px; padding-bottom:9px; border-bottom:2px solid var(--accent);
-  display:flex; align-items:center; gap:9px}
-h2::before{content:""; width:9px; height:9px; background:var(--accent);
-  border-radius:2px; flex:none}
-h3{font-size:14px; font-weight:var(--weight); margin:18px 0 8px; color:var(--ink)}
-p{margin:0 0 12px; color:var(--dim)}
-code{font-family:var(--mono); font-size:13px; background:rgba(0,0,0,.1);
-  padding:2px 6px; border-radius:2px; color:var(--copper)}
-table{width:100%; border-collapse:collapse; margin:12px 0 20px; font-size:14px}
-th{text-align:left; font-family:var(--mono); font-size:10px; letter-spacing:.08em;
-  text-transform:uppercase; color:var(--accent); border-bottom:2px solid var(--accent);
-  padding:8px 4px; font-weight:600}
-td{border-bottom:1px solid var(--line); padding:8px 4px; color:var(--dim)}
-tr:hover td{background:rgba(255,255,255,.02)}
-.spec{margin:16px 0; padding:12px; border-left:3px solid var(--accent);
-  background:rgba(0,0,0,.05)}
-.spec dt{font-family:var(--mono); font-size:10px; letter-spacing:.08em;
-  text-transform:uppercase; color:var(--accent); margin-bottom:2px}
-.spec dd{margin:0; color:var(--dim); font-size:13px; padding-left:12px}
-.led{display:grid; grid-template-columns:60px 1fr 1fr; gap:12px; align-items:center;
-  margin:12px 0; padding:8px; border-left:2px solid var(--line)}
-.led-dot{width:24px; height:24px; border-radius:50%; justify-self:center}
-.led-blue{background:#4A90E2; box-shadow:0 0 8px #4A90E2}
-.led-amber{background:#F5A623; box-shadow:0 0 8px #F5A623}
-.led-purple{background:#9013FE; box-shadow:0 0 8px #9013FE}
-.led-green{background:#7ED321; box-shadow:0 0 8px #7ED321}
-pre{background:rgba(0,0,0,.1); padding:12px; border-radius:4px;
-  overflow-x:auto; font-size:12px; line-height:1.4; margin:12px 0}
-ul{margin:0; padding-left:20px; list-style:none}
-li{margin:6px 0; padding-left:12px; position:relative}
-li::before{content:"▪"; position:absolute; left:0; color:var(--accent)}
-.back{display:inline-block; font-family:var(--mono); font-size:11px;
-  letter-spacing:.08em; color:var(--copper); text-decoration:none;
-  margin-bottom:20px}
-.back:hover{color:var(--accent)}
-.theme{position:fixed; top:20px; right:20px; z-index:5;
-  display:flex; align-items:center; gap:8px;
-  background:none; border:1px solid var(--line); border-radius:100px;
-  padding:7px 13px 7px 10px; cursor:pointer; color:var(--dim);
-  font-family:var(--mono); font-size:10.5px; letter-spacing:.12em; text-transform:uppercase;
-  transition:color .3s, border-color .3s}
-.theme:hover{color:var(--ink); border-color:var(--accent)}
-.theme svg{width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:1.6;
-  stroke-linecap:round; flex:none}
-.theme .moon{display:none}
-html[data-theme="light"] .theme .sun{display:none}
-html[data-theme="light"] .theme .moon{display:block}
-body{transition:background-color 1.9s cubic-bezier(.4,0,.2,1)}
-section,h2,h3,p,table,pre,code,.spec{
-  transition:border-color 1.9s cubic-bezier(.4,0,.2,1),
-    background-color 1.9s cubic-bezier(.4,0,.2,1),
-    color 1.9s cubic-bezier(.4,0,.2,1)}
-@media(max-width:520px){
-  table{font-size:12px}
-  th,td{padding:6px 2px}
-  .led{grid-template-columns:50px 1fr}
-  .led-dot{width:20px; height:20px}
-}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+a{color:var(--accent);text-decoration-color:color-mix(in srgb,var(--accent) 45%,transparent)}
+a:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+h1,h2,h3{font-family:var(--font-display);font-weight:600;text-wrap:balance;margin:0;color:var(--ink)}
+.eyebrow{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+code,.mono{font-family:var(--font-mono)}
+.shell{display:grid;grid-template-columns:240px minmax(0,1fr);gap:0;max-width:1180px;margin:0 auto}
+@media(max-width:900px){.shell{grid-template-columns:1fr}}
+nav.toc{position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;padding:2.25rem 1.25rem 2rem 1.5rem;border-right:1px solid var(--line)}
+@media(max-width:900px){nav.toc{position:static;height:auto;border-right:none;border-bottom:1px solid var(--line);padding:1.25rem 1.5rem}}
+nav.toc .back{display:inline-flex;align-items:center;gap:.4rem;font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);text-decoration:none;margin-bottom:1.1rem}
+nav.toc .back:hover{color:var(--accent)}
+nav.toc .brand{display:block;font-family:var(--font-display);font-weight:700;font-size:1.05rem;margin-bottom:.2rem}
+nav.toc .brand-sub{display:block;font-size:.8rem;color:var(--dim);margin-bottom:1.75rem}
+nav.toc ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.05rem;counter-reset:sec}
+@media(max-width:900px){nav.toc ol{flex-direction:row;flex-wrap:wrap;gap:.4rem 1rem}}
+nav.toc li{counter-increment:sec}nav.toc a{display:flex;gap:.55rem;padding:.32rem .4rem;border-radius:4px;font-size:.86rem;color:var(--dim);text-decoration:none}
+nav.toc a::before{content:counter(sec,decimal-leading-zero);font-family:var(--font-mono);font-size:.75rem;color:var(--accent);opacity:.75}
+nav.toc a:hover{color:var(--ink);background:var(--surface-2)}
+main{padding:0 0 6rem;min-width:0}
+.hero{padding:3.4rem 3rem 2.6rem;border-bottom:1px solid var(--line)}
+@media(max-width:640px){.hero{padding:2.2rem 1.25rem 2rem}}.hero h1{font-size:clamp(1.9rem,3.4vw,2.7rem)}.hero .dek{max-width:62ch;color:var(--dim);font-size:1.05rem;margin-top:.9rem}
+.meta-row{display:flex;flex-wrap:wrap;gap:.5rem .7rem;margin-top:1.5rem}.chip{font-family:var(--font-mono);font-size:.76rem;padding:.3rem .6rem;border:1px solid var(--line);border-radius:999px;color:var(--dim);background:var(--surface)}
+.chip.link{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 35%,var(--line));text-decoration:none}
+section{padding:2.75rem 3rem;border-bottom:1px solid var(--line)}
+@media(max-width:640px){section{padding:2.1rem 1.25rem}}
+section>.eyebrow{display:block;margin-bottom:.5rem}section>h2{font-size:1.5rem;margin-bottom:1.1rem}
+section>.lead{color:var(--dim);max-width:68ch;margin:-.4rem 0 1.5rem}section p{max-width:70ch}section p+p{margin-top:.9rem}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:1.3rem 1.4rem}.stack{display:flex;flex-direction:column;gap:1rem}.grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+@media(max-width:720px){.grid-2{grid-template-columns:1fr}}
+.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px}table{border-collapse:collapse;width:100%;min-width:480px;background:var(--surface)}
+th,td{text-align:left;padding:.6rem .85rem;border-bottom:1px solid var(--line);font-size:.88rem;vertical-align:top}
+thead th{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);background:var(--surface-2);font-weight:500}
+tbody tr:last-child td{border-bottom:none}td.mono,th.mono{font-family:var(--font-mono)}td.num{font-variant-numeric:tabular-nums;font-family:var(--font-mono)}tbody tr:hover{background:var(--surface-2)}
+pre{margin:0;background:var(--code-bg);color:var(--code-text);border-radius:8px;padding:.95rem 1.1rem;overflow-x:auto;font-family:var(--font-mono);font-size:.83rem;line-height:1.6;border:1px solid var(--code-rule)}
+pre .c{color:var(--code-dim)}pre .k{color:var(--code-accent)}code.pin{background:var(--surface-2);border:1px solid var(--line);border-radius:4px;padding:.08rem .4rem;font-size:.85em}
+.fn-group{margin-bottom:1.6rem}.fn-group:last-child{margin-bottom:0}.fn-group h3{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);font-family:var(--font-mono);font-weight:500;margin-bottom:.7rem;padding-bottom:.5rem;border-bottom:1px solid var(--line)}
+.fn{padding:.9rem 0;border-bottom:1px dashed var(--line)}.fn:last-child{border-bottom:none}.fn .sig{font-family:var(--font-mono);font-size:.86rem;font-weight:500;color:var(--ink)}.fn .sig .name{color:var(--accent)}.fn p{margin:.45rem 0 0;font-size:.92rem;color:var(--dim);max-width:66ch}.fn .note{margin-top:.5rem;font-size:.82rem;color:var(--warn);display:flex;gap:.45rem;max-width:66ch}.fn .note::before{content:"\25B3";flex:none}
+.diagram-card{padding:1.5rem 1.5rem 1.2rem}.diagram-card svg{width:100%;height:auto;display:block}.diagram-caption{font-size:.8rem;color:var(--dim);margin-top:.8rem}
+.led-list{display:flex;flex-direction:column;gap:.7rem}.led-row{display:grid;grid-template-columns:26px 150px 1fr;gap:.8rem;align-items:start;font-size:.9rem}
+.led-dot{width:14px;height:14px;border-radius:50%;margin-top:.2rem;flex:none}
+.quirks{display:flex;flex-direction:column;gap:.9rem}.quirk{display:grid;grid-template-columns:22px 1fr;gap:.7rem}.quirk .mark{color:var(--warn);font-family:var(--font-mono)}.quirk p{margin:0;font-size:.92rem}.quirk .where{color:var(--dim);font-size:.8rem}
+footer{padding:2.5rem 3rem 3.5rem;color:var(--dim);font-size:.85rem}@media(max-width:640px){footer{padding:2rem 1.25rem 3rem}}
+.theme{position:fixed;top:16px;right:16px;z-index:5;display:flex;align-items:center;gap:8px;background:none;border:1px solid var(--line);border-radius:100px;padding:6px 12px 6px 10px;cursor:pointer;color:var(--dim);font-family:var(--font-mono);font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;transition:all .2s}
+.theme:hover{color:var(--ink);border-color:var(--accent)}.theme svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;flex:none}.theme .moon{display:none}
+html[data-theme="light"] .theme .sun{display:none}html[data-theme="light"] .theme .moon{display:block}
+@media(max-width:640px){.theme{top:10px;right:10px;padding:6px 10px}.theme .label{display:none}}
+body{transition:background-color .4s ease}h1,h2,h3,h4,p,a,code,pre,table,table th,table td{transition:color .4s ease,border-color .4s ease,background-color .4s ease}
 </style>
 </head>
 <body>
 
-<button class="theme" id="themeBtn" type="button" aria-pressed="false"
-  aria-label="Switch between day and night">
-  <svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/>
-    <path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6"/></svg>
-  <svg class="moon" viewBox="0 0 24 24" aria-hidden="true">
-    <path d="M20.5 14.6A8.6 8.6 0 0 1 9.4 3.5a8.6 8.6 0 1 0 11.1 11.1z"/></svg>
-  <span class="label">Night</span>
+<button class="theme" id="themeBtn" type="button" aria-pressed="false" aria-label="Toggle theme">
+  <svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6"/></svg>
+  <svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.6A8.6 8.6 0 0 1 9.4 3.5a8.6 8.6 0 1 0 11.1 11.1z"/></svg>
+  <span class="label">Dark</span>
 </button>
 
-<a href="/" class="back">← Back to portfolio</a>
+<div class="shell">
+<nav class="toc" aria-label="Table of contents">
+  <a class="back" href="index.html">&larr; Portfolio</a>
+  <span class="brand">esp32c3-zwift-ble-bridge</span>
+  <span class="brand-sub">Firmware documentation</span>
+  <ol>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#architecture">Architecture</a></li>
+    <li><a href="#pinout">Pin reference</a></li>
+    <li><a href="#ble">BLE profile</a></li>
+    <li><a href="#states">Connection states</a></li>
+    <li><a href="#functions">Functions</a></li>
+    <li><a href="#constants">Tuning</a></li>
+    <li><a href="#notes">Notes</a></li>
+  </ol>
+</nav>
 
-<h1>Zwift BLE Bridge</h1>
-<p class="role">ESP32-C3 dual-mode firmware · heart rate monitor bridge · real-time telemetry</p>
-<div class="band" aria-hidden="true"><i></i><i></i><i></i></div>
+<main>
+<header class="hero">
+  <span class="eyebrow">Embedded firmware · ESP32-C3 · C++/Arduino · BLE</span>
+  <h1>Zwift BLE Bridge</h1>
+  <p class="dek">Dual-role BLE firmware for an ESP32-C3: it connects outward as a <strong>client</strong> to a physical heart-rate strap while simultaneously running a <strong>server</strong> that re-broadcasts unified Running Speed &amp; Cadence and Heart Rate data to Zwift — with a crash-hardened, non-blocking scan cycle and a NeoPixel that reports link health at a glance.</p>
+  <div class="meta-row">
+    <span class="chip">MCU: ESP32-C3</span>
+    <span class="chip">Radio: dual-mode BLE (client + server)</span>
+    <span class="chip">Status: 1× WS2812B NeoPixel</span>
+    <span class="chip">Core: Arduino-ESP32 v3.2.0+</span>
+    <a class="chip link" href="https://github.com/amd858/esp32c3-zwift-ble-bridge" target="_blank" rel="noopener">github.com/amd858/esp32c3-zwift-ble-bridge ↗</a>
+  </div>
+</header>
 
-<p class="intro">A sophisticated dual-mode BLE firmware that simultaneously acts as a client (subscribing to a physical heart rate monitor strap) and a server (broadcasting Running Speed & Cadence metrics to Zwift). Runs on a single ESP32-C3 chip with intelligent sensor auto-discovery, non-blocking architecture, and NeoPixel status feedback.</p>
-
-<section>
-<h2>Core Architecture</h2>
-<p>The firmware breaks into two distinct BLE roles operating concurrently on one chip:</p>
-<ul>
-  <li><b>BLE Client:</b> Connects to external heart rate monitor (Magene, Garmin, etc.) and subscribes to HR notifications</li>
-  <li><b>BLE Server:</b> Broadcasts RSC (Running Speed & Cadence) and HR data to Zwift app</li>
-  <li><b>Loop Model:</b> Non-blocking state machine — no <code>delay()</code> calls; strict 1-second data pipeline intervals</li>
-  <li><b>Sensor Addressing:</b> Lock mode (bind to specific MAC) or Auto mode (auto-connect to first HR monitor detected)</li>
-  <li><b>Memory Management:</b> Explicit cleanup of global BLE client pointers to handle unexpected strap disconnection</li>
-  <li><b>Stability Engine:</b> ESP32 Arduino Core v3.2.0+ with discrete 1-second scanning windows (every 5 seconds) to prevent "scan not active" crashes</li>
-</ul>
+<section id="overview">
+  <span class="eyebrow">01 · What it does</span>
+  <h2>Overview</h2>
+  <p>Zwift expects a single BLE peripheral per data type. This firmware sits between an existing physical heart-rate strap and Zwift, holding two independent BLE roles open on one chip at once: a <strong>client</strong> connection that subscribes to the strap's standard Heart Rate service, and a <strong>server</strong> that advertises Running Speed &amp; Cadence (RSC) plus a re-broadcast Heart Rate service for Zwift to pair with.</p>
+  <p>Speed data doesn't come from a wheel sensor — it arrives as plain text over a UART line (<code class="pin">Serial1</code>), scaled and clamped, then packed into the RSC characteristic every second. This makes the bridge a natural fit for treadmill or trainer setups where speed is already being computed by another controller and just needs to reach Zwift over BLE.</p>
+  <p>The scanning logic is deliberately conservative: rather than holding the radio in a continuous scan (which starves outbound notifications and has triggered stack crashes on newer ESP32 Arduino cores), it opens a 1-second scan window every 5 seconds and leaves the radio free the rest of the time for the outbound server link.</p>
 </section>
 
-<section>
-<h2>Hardware Configuration</h2>
+<section id="architecture">
+  <span class="eyebrow">02 · Signal flow</span>
+  <h2>Signal architecture</h2>
+  <p class="lead">Two BLE roles and one UART input converge on a single 1-second data pipeline tick.</p>
+  <div class="card diagram-card">
+    <svg viewBox="0 0 940 300" role="img" aria-labelledby="arch-title arch-desc">
+      <title id="arch-title">Signal flow diagram</title>
+      <desc id="arch-desc">A physical heart rate strap connects to the ESP32-C3 as a BLE client. A UART line feeds simulated speed. The ESP32-C3 runs a BLE server that notifies Zwift with RSC and HR data, and drives a NeoPixel status LED plus a warning pin.</desc>
+      <defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--dim)"/></marker></defs>
+      <g font-family="IBM Plex Mono, monospace" font-size="12">
+        <rect x="10" y="20" width="190" height="44" rx="6" fill="none" stroke="var(--line)"/><text x="105" y="46" fill="var(--ink)" text-anchor="middle">Physical HR strap (BLE 0x180D)</text>
+        <rect x="10" y="90" width="190" height="44" rx="6" fill="none" stroke="var(--line)"/><text x="105" y="116" fill="var(--ink)" text-anchor="middle">UART speed feed (Serial1)</text>
+      </g>
+      <line x1="200" y1="42" x2="365" y2="115" stroke="var(--dim)" marker-end="url(#arrow)"/><text x="270" y="65" font-size="10" fill="var(--dim)" font-family="IBM Plex Mono, monospace">BLE client scan</text>
+      <line x1="200" y1="112" x2="365" y2="135" stroke="var(--dim)" marker-end="url(#arrow)"/>
+      <rect x="370" y="100" width="200" height="80" rx="8" fill="color-mix(in srgb,var(--accent) 16%,var(--paper))" stroke="var(--accent)" stroke-width="1.5"/>
+      <text x="470" y="134" fill="var(--ink)" text-anchor="middle" font-family="IBM Plex Sans Condensed" font-size="15" font-weight="600">ESP32-C3</text>
+      <text x="470" y="154" fill="var(--dim)" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11">1s data pipeline tick</text>
+      <g font-family="IBM Plex Mono, monospace" font-size="12">
+        <rect x="720" y="10" width="210" height="44" rx="6" fill="none" stroke="var(--line)"/><text x="825" y="36" fill="var(--ink)" text-anchor="middle">Zwift app (BLE server link)</text>
+        <rect x="720" y="70" width="210" height="44" rx="6" fill="none" stroke="var(--line)"/><text x="825" y="96" fill="var(--ink)" text-anchor="middle">RSC 0x1814 + HR 0x180D notify</text>
+        <rect x="720" y="130" width="210" height="44" rx="6" fill="none" stroke="var(--line)"/><text x="825" y="156" fill="var(--ink)" text-anchor="middle">NeoPixel status LED</text>
+        <rect x="720" y="190" width="210" height="44" rx="6" fill="none" stroke="var(--line)"/><text x="825" y="216" fill="var(--ink)" text-anchor="middle">Warning pin (HR &gt; 114 BPM)</text>
+      </g>
+      <line x1="570" y1="120" x2="718" y2="32" stroke="var(--dim)" marker-end="url(#arrow)"/>
+      <line x1="570" y1="132" x2="718" y2="92" stroke="var(--dim)" marker-end="url(#arrow)"/>
+      <line x1="570" y1="150" x2="718" y2="152" stroke="var(--dim)" marker-end="url(#arrow)"/>
+      <line x1="570" y1="165" x2="718" y2="212" stroke="var(--dim)" marker-end="url(#arrow)"/>
+    </svg>
+    <p class="diagram-caption">The BLE client (inbound) and BLE server (outbound) run concurrently on the same radio, arbitrated by a windowed scan schedule — see Connection states below.</p>
+  </div>
+</section>
 
-<h3>ESP32-C3 Dev Module Pinout</h3>
-<table>
-  <thead><tr><th>Function</th><th>GPIO</th><th>Purpose</th></tr></thead>
-  <tbody>
-    <tr><td>UART RX (Serial1)</td><td>6</td><td>Receive speed telemetry from external source (e.g., treadmill control deck)</td></tr>
-    <tr><td>UART TX (Serial1)</td><td>5</td><td>Transmit (optional; reserved for bidirectional UART)</td></tr>
-    <tr><td>NeoPixel Data</td><td>8</td><td>WS2812B RGB LED (brightness 40/255)</td></tr>
-    <tr><td>HR Alert Output</td><td>3</td><td>Digital HIGH when heart rate exceeds 114 BPM</td></tr>
-  </tbody>
-</table>
+<section id="pinout">
+  <span class="eyebrow">03 · Hardware map</span>
+  <h2>Pin reference</h2>
+  <p class="lead">Minimal footprint by design — four functional pins beyond the ESP32-C3's own USB/power lines.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Pin</th><th>Symbol</th><th>Mode</th><th>Function</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">GPIO6</td><td class="mono">RX_PIN</td><td class="mono">Serial1 RX</td><td>Hardware UART input — ingests speed telemetry as newline-terminated text</td></tr>
+        <tr><td class="mono">GPIO5</td><td class="mono">TX_PIN</td><td class="mono">Serial1 TX</td><td>Hardware UART output — currently unused by the bridge logic, reserved</td></tr>
+        <tr><td class="mono">GPIO8</td><td class="mono">LED_PIN</td><td class="mono">RMT / NeoPixel</td><td>Single WS2812B data line — drives the connection-status pixel</td></tr>
+        <tr><td class="mono">GPIO3</td><td class="mono">WARNING_HEARTRATE_PIN</td><td class="mono">OUTPUT</td><td>Driven HIGH while heart rate &gt; 114 BPM, LOW otherwise</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
 
-<h3>Serial Configuration</h3>
-<div class="spec">
-  <dt>Baud Rate</dt>
-  <dd>115200 (8N1)</dd>
-  <dt>Hardware</dt>
-  <dd>UART (Serial1 on pins 5 & 6)</dd>
-  <dt>Purpose</dt>
-  <dd>Ingest speed data from treadmill or external telemetry source; debug output via Serial Monitor</dd>
+<section id="ble">
+  <span class="eyebrow">04 · GATT services</span>
+  <h2>BLE profile</h2>
+  <p class="lead">The server side exposes two standard Bluetooth SIG profiles so any client — Zwift included — recognizes them without custom pairing logic.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Service</th><th>UUID</th><th>Characteristic</th><th>UUID</th><th>Properties</th></tr></thead>
+      <tbody>
+        <tr><td>Running Speed &amp; Cadence</td><td class="mono">0x1814</td><td>RSC Measurement</td><td class="mono">0x2A53</td><td class="mono">NOTIFY</td></tr>
+        <tr><td>Running Speed &amp; Cadence</td><td class="mono">0x1814</td><td>Sensor Location</td><td class="mono">0x2A5D</td><td class="mono">READ (static, value = 1)</td></tr>
+        <tr><td>Heart Rate</td><td class="mono">0x180D</td><td>Heart Rate Measurement</td><td class="mono">0x2A37</td><td class="mono">NOTIFY</td></tr>
+        <tr><td colspan="2">Client Characteristic Config (both chars)</td><td colspan="2">CCCD</td><td class="mono">0x2902</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="grid-2" style="margin-top:1.25rem">
+    <div class="card">
+      <h4>RSC Measurement buffer (10 bytes)</h4>
+      <pre><span class="k">uint8_t</span> rscBuffer[<span class="c">10</span>] = {
+  <span class="c">3</span>,                        <span class="c">// flags: inst speed + stride present</span>
+  speed_lo, speed_hi,          <span class="c">// inst_speed, uint16 LE, 1/256 m/s units</span>
+  inst_cadence,                <span class="c">// uint8, steps/min</span>
+  stride_lo, stride_hi,        <span class="c">// inst_stride_length, uint16 LE, cm</span>
+  dist0, dist1, dist2, dist3   <span class="c">// total_distance, uint32 LE</span>
+};</pre>
+    </div>
+    <div class="card">
+      <h4>Heart Rate Measurement buffer (2 bytes)</h4>
+      <pre><span class="k">uint8_t</span> hrmBuffer[<span class="c">2</span>] = {
+  <span class="c">0x00</span>,          <span class="c">// flags: UINT8 BPM format</span>
+  heart_rate_out  <span class="c">// BPM value</span>
+};</pre>
+    </div>
+  </div>
+</section>
+
+<section id="states">
+  <span class="eyebrow">05 · Link health</span>
+  <h2>Connection states</h2>
+  <p class="lead">Two independent booleans — <code class="pin">connectedToSensor</code> and <code class="pin">deviceConnectedToZwift</code> — combine into four operating states, rendered live on the NeoPixel every 250ms blink tick.</p>
+  <div class="led-list">
+    <div class="led-row"><div class="led-dot" style="background:#2255ff"></div><div><strong>Blinking blue</strong><br><span style="color:var(--dim);font-size:.85em">strap search</span></div><div>Neither link is up. Hub is powered on and running its windowed scan, hunting for the strap's HR advertisement.</div></div>
+    <div class="led-row"><div class="led-dot" style="background:#ff9600"></div><div><strong>Blinking amber</strong><br><span style="color:var(--dim);font-size:.85em">pairing standby</span></div><div>Strap is bound (<code class="pin">connectedToSensor = true</code>) but Zwift hasn't connected to the server yet.</div></div>
+    <div class="led-row"><div class="led-dot" style="background:#800080"></div><div><strong>Solid purple</strong><br><span style="color:var(--dim);font-size:.85em">Zwift fallback</span></div><div>Zwift is connected but the strap isn't. <code class="pin">heart_rate_in</code> is forced to a fixed placeholder value rather than live data — see Notes.</div></div>
+    <div class="led-row"><div class="led-dot" style="background:#00c800"></div><div><strong>Solid green</strong><br><span style="color:var(--dim);font-size:.85em">full system active</span></div><div>Both links are up. Live strap data is passing straight through to Zwift every second.</div></div>
+  </div>
+</section>
+
+<section id="functions">
+  <span class="eyebrow">06 · Function reference</span>
+  <h2>Function reference</h2>
+
+  <div class="fn-group">
+    <h3>Telemetry ingestion</h3>
+    <div class="fn">
+      <div class="sig"><span class="name">handleUartIngestion</span>()</div>
+      <p>Drains <code class="pin">Serial1</code> byte-by-byte, buffering into a line until <code class="pin">\n</code>. Parses the line as a float, scales it by <code class="pin">0.125</code>, and clamps it into <code class="pin">simulatedKmph</code> if it falls within 0–40 km/h.</p>
+    </div>
+  </div>
+
+  <div class="fn-group">
+    <h3>Sensor connection &amp; scanning</h3>
+    <div class="fn">
+      <div class="sig"><span class="name">handleSensorBackgroundScanning</span>()</div>
+      <p>If not connected, opens a non-blocking 1-second scan window every 5 seconds via <code class="pin">BLEDevice::getScan()-&gt;start(1, false)</code> — deliberately short to avoid starving the outbound server connection.</p>
+    </div>
+    <div class="fn">
+      <div class="sig"><span class="name">AdvertisedDeviceCallbacks::onResult</span>(device)</div>
+      <p>Filters scan results to devices advertising the Heart Rate service (0x180D). In lock mode, rejects any MAC that doesn't case-insensitively match <code class="pin">targetMacAddress</code>; in auto mode, accepts the first match found.</p>
+    </div>
+    <div class="fn">
+      <div class="sig"><span class="name">connectToPhysicalStrap</span>()</div>
+      <p>Creates a fresh <code class="pin">BLEClient</code>, connects, resolves the HR service and characteristic, and registers a notify callback with CCCD 0x2902 enabled. Explicitly deletes any stale client pointer first.</p>
+      <div class="note">Never calls <code class="pin">.stop()</code> on the scanner — avoids a known crash vector on Arduino-ESP32 core 3.2.0</div>
+    </div>
+  </div>
+
+  <div class="fn-group">
+    <h3>Data pipeline</h3>
+    <div class="fn">
+      <div class="sig"><span class="name">runDataPipelineExecution</span>()</div>
+      <p>Runs once per second. Converts <code class="pin">simulatedKmph</code> to RSC's 1/256 m/s fixed-point speed units, packages the RSC and HR buffers, and calls <code class="pin">notify()</code> on both characteristics if Zwift is connected.</p>
+    </div>
+    <div class="fn">
+      <div class="sig"><span class="name">processFitnessData</span>(hr_in, hr_out, spd_out)</div>
+      <p>Pass-through mapping from raw inputs to outbound values. Also drives <code class="pin">WARNING_HEARTRATE_PIN</code> HIGH when heart rate exceeds 114 BPM.</p>
+    </div>
+  </div>
+
+  <div class="fn-group">
+    <h3>Zwift server maintenance</h3>
+    <div class="fn">
+      <div class="sig"><span class="name">handleZwiftConnectionStateTracking</span>()</div>
+      <p>Watches <code class="pin">deviceConnectedToZwift</code> for a falling edge. On disconnect, waits, then explicitly calls <code class="pin">pServer-&gt;startAdvertising()</code> so the server is immediately re-discoverable.</p>
+      <div class="note">Uses a blocking <code class="pin">delay(500)</code> before restarting advertising</div>
+    </div>
+  </div>
+</section>
+
+<section id="constants">
+  <span class="eyebrow">07 · Tuning constants</span>
+  <h2>Tuning constants</h2>
+  <p class="lead">All configuration lives at the top of the sketch as plain <code class="pin">#define</code>s and globals — no runtime config UI.</p>
+
+  <div class="grid-2">
+    <div class="card">
+      <h4>Hardware pins</h4>
+      <pre><span class="k">#define</span> RX_PIN <span class="c">6</span>
+<span class="k">#define</span> TX_PIN <span class="c">5</span>
+<span class="k">#define</span> LED_PIN <span class="c">8</span>
+<span class="k">#define</span> WARNING_HEARTRATE_PIN <span class="c">3</span></pre>
+    </div>
+    <div class="card">
+      <h4>Sensor addressing</h4>
+      <pre><span class="c">// Lock mode — rigid bind, prevents cross-talk</span>
+<span class="k">const String</span> targetMacAddress = <span class="c">"ed:92:5c:9c:06:a2"</span>;
+
+<span class="c">// Auto mode — take the first HR strap found</span>
+<span class="k">const String</span> targetMacAddress = <span class="c">""</span>;</pre>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-top:1rem">
+    <div class="card">
+      <h4>Scan schedule</h4>
+      <pre>pBLEScan-&gt;setInterval(<span class="c">1349</span>);
+pBLEScan-&gt;setWindow(<span class="c">449</span>);
+<span class="c">// windowed scan: 1s scan every 5000ms</span>
+<span class="k">if</span> (millis() - lastScanRestart &gt;= <span class="c">5000</span>) { … }</pre>
+    </div>
+    <div class="card">
+      <h4>Safety &amp; scaling</h4>
+      <pre><span class="c">// HR warning threshold</span>
+<span class="k">if</span> (heart_rate_in &gt; <span class="c">114</span>) warningPin = HIGH;
+
+<span class="c">// UART speed scale factor</span>
+simulatedKmph = raw * <span class="c">0.125</span>;  <span class="c">// clamped 0–40 km/h</span>
+
+<span class="c">// data pipeline cadence</span>
+<span class="k">if</span> (millis() - lastBleSendTime &gt;= <span class="c">1000</span>) { … }</pre>
+    </div>
+  </div>
+</section>
+
+<section id="notes">
+  <span class="eyebrow">08 · Notes &amp; known quirks</span>
+  <h2>Notes &amp; known quirks</h2>
+
+  <div class="quirks">
+    <div class="quirk">
+      <div class="mark">⚠</div>
+      <div>
+        <p><strong>Fallback heart rate is a fixed value, not a simulation:</strong> when the strap is unlinked, <code class="pin">heart_rate_in</code> is hard-set to <code class="pin">1</code> rather than a randomized 50–60 BPM pulse. The purple LED state still reports it as "fallback simulation."</p>
+        <div class="where">See <code class="pin">runDataPipelineExecution()</code></div>
+      </div>
+    </div>
+
+    <div class="quirk">
+      <div class="mark">⚠</div>
+      <div>
+        <p><strong>One blocking delay remains in the loop:</strong> <code class="pin">handleZwiftConnectionStateTracking()</code> calls <code class="pin">delay(500)</code> before restarting advertising, despite the rest of the firmware being fully non-blocking.</p>
+        <div class="where">See <code class="pin">handleZwiftConnectionStateTracking()</code></div>
+      </div>
+    </div>
+
+    <div class="quirk">
+      <div class="mark">ℹ</div>
+      <div>
+        <p><strong>Explicit heap cleanup instead of RAII:</strong> <code class="pin">pGlobalClient</code> and <code class="pin">myPhysicalSensor</code> are manually <code class="pin">delete</code>d before every reassignment, so an accidental strap battery pull re-enters scan mode cleanly without a manual reset.</p>
+        <div class="where">See <code class="pin">connectToPhysicalStrap()</code>, <code class="pin">MageneClientCallbacks::onDisconnect()</code></div>
+      </div>
+    </div>
+
+    <div class="quirk">
+      <div class="mark">ℹ</div>
+      <div>
+        <p><strong>TX_PIN is wired but idle:</strong> <code class="pin">Serial1</code> is initialized full-duplex on pins 5/6, but the firmware only ever reads from it — outbound telemetry on TX_PIN is unused in this revision.</p>
+        <div class="where">See <code class="pin">setup()</code></div>
+      </div>
+    </div>
+
+    <div class="quirk">
+      <div class="mark">ℹ</div>
+      <div>
+        <p><strong>No <code class="pin">.stop()</code> on the BLE scanner by design:</strong> a documented workaround for Arduino-ESP32 core 3.2.0, where explicitly stopping an active scan was a reliable crash vector. The windowed 1s/5s schedule lets scans self-terminate instead.</p>
+        <div class="where">See <code class="pin">handleSensorBackgroundScanning()</code></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>Zwift BLE Bridge firmware documentation. <a href="https://github.com/amd858/esp32c3-zwift-ble-bridge">View on GitHub ↗</a></p>
+  <p><a href="index.html">← Back to portfolio</a></p>
+</footer>
+</main>
 </div>
-
-<h3>Dependencies</h3>
-<ul>
-  <li><b>Arduino Core:</b> ESP32 v3.2.0 or newer (mandatory for stability)</li>
-  <li><b>BLE Stack:</b> Arduino BLEDevice library (included in ESP32 core)</li>
-  <li><b>LED Control:</b> Adafruit_NeoPixel library</li>
-  <li><b>Build Environment:</b> Arduino IDE 2.x or PlatformIO</li>
-</ul>
-</section>
-
-<section>
-<h2>BLE Architecture</h2>
-
-<h3>BLE Server (Outbound to Zwift)</h3>
-<table>
-  <thead><tr><th>Service</th><th>UUID</th><th>Characteristic</th><th>UUID</th><th>Type</th></tr></thead>
-  <tbody>
-    <tr><td>Running Speed & Cadence (RSC)</td><td><code>0x1814</code></td><td>RSC Measurement</td><td><code>0x2A53</code></td><td>NOTIFY</td></tr>
-    <tr><td>Running Speed & Cadence (RSC)</td><td><code>0x1814</code></td><td>Sensor Position</td><td><code>0x2A5D</code></td><td>READ</td></tr>
-    <tr><td>Heart Rate</td><td><code>0x180D</code></td><td>HR Measurement</td><td><code>0x2A37</code></td><td>NOTIFY</td></tr>
-  </tbody>
-</table>
-
-<h3>BLE Client (Inbound from HR Strap)</h3>
-<table>
-  <thead><tr><th>Service</th><th>UUID</th><th>Characteristic</th><th>UUID</th></tr></thead>
-  <tbody>
-    <tr><td>Heart Rate</td><td><code>0x180D</code></td><td>HR Measurement</td><td><code>0x2A37</code></td></tr>
-  </tbody>
-</table>
-
-<h3>Data Notification Descriptors</h3>
-<div class="spec">
-  <dt>CCCD (Client Characteristic Configuration)</dt>
-  <dd>UUID <code>0x2902</code> — enables notifications on both RSC and HR characteristics; automatically configured during device binding</dd>
-</div>
-
-<h3>Advertising Parameters</h3>
-<div class="spec">
-  <dt>Device Name</dt>
-  <dd>"SENSOR Hub" (visible in Zwift app during pairing)</dd>
-  <dt>Broadcast Services</dt>
-  <dd>RSC (<code>0x1814</code>), Heart Rate (<code>0x180D</code>)</dd>
-  <dt>TX Power</dt>
-  <dd>Default (typically 0 dBm for dev boards)</dd>
-</div>
-</section>
-
-<section>
-<h2>Data Formats & Buffers</h2>
-
-<h3>RSC Measurement Buffer (10 bytes)</h3>
-<pre>Byte 0:   Flags (0x03 = speed, cadence, stride, distance present)
-Byte 1-2: Instantaneous Speed (uint16_t, little-endian) — speed in 0.01 m/s units
-Byte 3:   Instantaneous Cadence (uint8_t) — steps per minute
-Byte 4-5: Stride Length (uint16_t, little-endian) — millimeters
-Byte 6-9: Total Distance (uint32_t, little-endian) — meters</pre>
-
-<h3>Heart Rate Buffer (2 bytes)</h3>
-<pre>Byte 0: Flags (0x00 = 8-bit HR, no RR intervals)
-Byte 1: Heart Rate (uint8_t) — BPM (0–255)</pre>
-
-<h3>Speed Conversion (from UART)</h3>
-<div class="spec">
-  <dt>Input Format</dt>
-  <dd>Floating-point string via Serial1 (e.g., "12.5")</dd>
-  <dt>Scaling</dt>
-  <dd>Raw input × 0.125 = km/h (then converted to 0.01 m/s units for BLE)</dd>
-  <dt>Validation Range</dt>
-  <dd>0–40 km/h (out-of-range values rejected silently)</dd>
-  <dt>Example</dt>
-  <dd>Treadmill sends "16.0" → 16 × 0.125 = 2 km/h → BLE buffer = 200 (0.01 m/s)</dd>
-</div>
-</section>
-
-<section>
-<h2>Firmware Subsystems</h2>
-
-<h3>1. Telemetry Ingestion (<code>handleUartIngestion</code>)</h3>
-<p>Listens to Serial1 (RX_PIN 6) for incoming speed data. Parses floating-point strings, applies 0.125 scaling factor, validates against 0–40 km/h bounds, and updates <code>simulatedKmph</code> for the RSC pipeline.</p>
-
-<h3>2. Sensor Background Scanning (<code>handleSensorBackgroundScanning</code>)</h3>
-<p>Manages intelligent BLE scanning to detect heart rate monitors without jamming the server's advertising. Executes 1-second scan windows every 5 seconds, leaving 4-second silent periods for uninterrupted Zwift server operations. Prevents ESP32 "scan not active" crash loops.</p>
-
-<h3>3. Sensor Binding (<code>connectToPhysicalStrap</code>)</h3>
-<p>Processes newly discovered HR monitor advertisements. Validates Heart Rate Service UUID (<code>0x180D</code>), enforces MAC address lock if configured, safely destroys stale memory pointers, creates a fresh BLE client handle, and subscribes to HR characteristic notifications via CCCD.</p>
-
-<h3>4. Data Pipeline Execution (<code>runDataPipelineExecution</code>)</h3>
-<p>Runs on a strict 1-second interval. Packages <code>simulatedKmph</code> into RSC GATT buffer format (10 bytes), passes physical or simulated HR into HR buffer (2 bytes), and notifies Zwift of both. Cadence, stride length, and total distance values are maintained as persistent state variables.</p>
-
-<h3>5. Zwift Connection State (<code>handleBleConnectionState</code>)</h3>
-<p>Monitors Zwift app connection/disconnection. On disconnect, wipes data pipelines, resets HR tracking to 0, and restarts server advertising beacon for instant reconnect or app switch.</p>
-
-<h3>6. LED Status Updates</h3>
-<p>Updates NeoPixel (LED_PIN 8) every 250ms based on connection state. Provides visual feedback without requiring serial monitor access.</p>
-</section>
-
-<section>
-<h2>LED Status Indicators</h2>
-
-<p>The onboard WS2812B NeoPixel communicates hardware and connectivity state instantaneously:</p>
-
-<div class="led">
-  <div class="led-dot led-blue" style="animation:blink 0.6s infinite"></div>
-  <div><b>Blinking Blue</b></div>
-  <div>Scanning for HR monitor (powered on, no strap detected)</div>
-</div>
-
-<div class="led">
-  <div class="led-dot led-amber" style="animation:blink 0.6s infinite"></div>
-  <div><b>Blinking Amber</b></div>
-  <div>Strap bound successfully; waiting for Zwift app to pair</div>
-</div>
-
-<div class="led">
-  <div class="led-dot led-purple"></div>
-  <div><b>Solid Purple</b></div>
-  <div>Connected to Zwift but strap is missing; transmitting fallback HR simulation (50–60 BPM)</div>
-</div>
-
-<div class="led">
-  <div class="led-dot led-green"></div>
-  <div><b>Solid Green</b></div>
-  <div><b>Perfect operation:</b> Live physical HR and speed data flowing through to Zwift</div>
-</div>
-
-<style>
-@keyframes blink { 0%,100%{opacity:0.3} 50%{opacity:1} }
-</style>
-</section>
-
-<section>
-<h2>Configuration Modes</h2>
-
-<h3>Lock Mode (Bind to Specific Strap)</h3>
-<pre>const String targetMacAddress = "ed:92:5c:9c:06:a2";</pre>
-<p>Rigidly bind to a specific heart rate monitor MAC address. Useful in busy gym environments to prevent cross-talk with nearby straps. The hub ignores all other HR monitor advertisements and waits exclusively for this device.</p>
-
-<h3>Auto Mode (Auto-Discover)</h3>
-<pre>const String targetMacAddress = "";  // Empty string</pre>
-<p>Automatically connect to the first HR monitor detected in range. Ideal for flexible, single-user setups. The hub scans and binds to whichever device advertises HR Service (<code>0x180D</code>) first.</p>
-
-<h3>Debug Output</h3>
-<pre>const bool debugMode = true;</pre>
-<p>Enable serial debug output at 115200 baud. Shows connection state, HR values, speed conversions, and BLE events. Disable to reduce noise if deploying in production.</p>
-</section>
-
-<section>
-<h2>Timing Specifications</h2>
-<table>
-  <thead><tr><th>Operation</th><th>Interval</th><th>Notes</th></tr></thead>
-  <tbody>
-    <tr><td>Data pipeline execution</td><td>1000 ms</td><td>Strict; packages and notifies RSC + HR to Zwift</td></tr>
-    <tr><td>LED status update</td><td>250 ms</td><td>Fast blink cycle for visual feedback</td></tr>
-    <tr><td>BLE scan window</td><td>1 second (every 5 sec)</td><td>Active scanning; 4-second silent period follows</td></tr>
-    <tr><td>Scan restart check</td><td>5 seconds</td><td>Checks if sensor re-scan is needed</td></tr>
-    <tr><td>Connection state check</td><td>Continuous</td><td>Non-blocking, checked in main loop every iteration</td></tr>
-  </tbody>
-</table>
-</section>
-
-<section>
-<h2>Safety & Thresholds</h2>
-
-<h3>Heart Rate Alert Output</h3>
-<div class="spec">
-  <dt>GPIO 3 (WARNING_HEARTRATE_PIN)</dt>
-  <dd>Driven HIGH when HR exceeds 114 BPM; useful for triggering an external alarm, warning LED, or relay</dd>
-</div>
-
-<h3>Speed Validation</h3>
-<ul>
-  <li>Minimum: 0 km/h</li>
-  <li>Maximum: 40 km/h</li>
-  <li>Out-of-range values are silently rejected and do not update the pipeline</li>
-</ul>
-
-<h3>Fallback HR Simulation</h3>
-<p>If Zwift is connected but the physical HR strap is missing, the firmware transmits a safe random simulation pulse (50–60 BPM) so the app doesn't hang or timeout. When the strap reconnects, live data resumes immediately.</p>
-</section>
-
-<section>
-<h2>Deployment & Installation</h2>
-
-<h3>Prerequisites</h3>
-<ol style="padding-left:20px">
-  <li>Arduino IDE 2.x or PlatformIO installed</li>
-  <li>ESP32 Arduino Core v3.2.0 or newer</li>
-  <li>Adafruit NeoPixel library installed via Library Manager</li>
-  <li>ESP32-C3 Dev Module board selected in IDE</li>
-</ol>
-
-<h3>Hardware Setup</h3>
-<ul>
-  <li>Connect USB-C cable to ESP32-C3</li>
-  <li>Verify COM port detected in IDE</li>
-  <li>Connect WS2812B NeoPixel to GPIO 8 (data), GND, and 5V</li>
-  <li>(Optional) Connect UART source to RX_PIN 6 and GND</li>
-  <li>(Optional) Connect relay/alarm to GPIO 3 for HR alert</li>
-</ul>
-
-<h3>Firmware Configuration</h3>
-<p>Before uploading, edit the source file:</p>
-<pre>// Line ~17: Set your sensor MAC or leave empty for auto-detect
-const String targetMacAddress = "";  // or "XX:XX:XX:XX:XX:XX"</pre>
-
-<h3>Upload & Verification</h3>
-<ul>
-  <li>Select <b>Tools → Board → esp32 → ESP32-C3 Dev Module</b></li>
-  <li>Select correct COM port and upload the sketch</li>
-  <li>Open Serial Monitor at 115200 baud</li>
-  <li>Watch NeoPixel: should blink blue (scanning state)</li>
-  <li>Bring HR strap into range; LED should blink amber when bound</li>
-  <li>Open Zwift app, pair the "SENSOR Hub" device; LED should turn green when live data flows</li>
-</ul>
-</section>
-
-<section>
-<h2>Testing Checklist</h2>
-<ul>
-  <li>☐ NeoPixel responds to connection state changes (blue → amber → green)</li>
-  <li>☐ Physical HR monitor pairs and transmits HR values to firmware (verify in Serial Monitor)</li>
-  <li>☐ Zwift app detects and pairs with "SENSOR Hub" broadcaster</li>
-  <li>☐ HR and speed metrics display live in Zwift</li>
-  <li>☐ Pulling HR strap battery triggers purple fallback state (LED solid, Zwift simulation active)</li>
-  <li>☐ Reattaching strap resumes green state and live data</li>
-  <li>☐ UART speed input (if used) converts correctly (raw × 0.125 = km/h)</li>
-  <li>☐ HR alert output (GPIO 3) goes HIGH when HR exceeds 114 BPM</li>
-  <li>☐ No memory leaks or reboots over 1+ hour runtime</li>
-  <li>☐ Serial Monitor shows clean debug output; no "scan not active" errors</li>
-</ul>
-</section>
-
-<section>
-<h2>Repository & Resources</h2>
-<p><b>GitHub:</b> <a href="https://github.com/amd858/esp32c3-zwift-ble-bridge" style="color:var(--ink); border-bottom:1px solid var(--copper); text-decoration:none">amd858/esp32c3-zwift-ble-bridge</a></p>
-<p><b>License:</b> Check repository for terms.</p>
-</section>
 
 <script>
 (function(){
   var root=document.documentElement, btn=document.getElementById('themeBtn'), label=btn.querySelector('.label'), saved=null;
-  try{ saved=localStorage.getItem('theme'); }catch(e){}
-  var start = saved || 'dark';
+  try{saved=localStorage.getItem('theme')}catch(e){}
+  var start=saved||'dark';
   apply(start,false);
-  function apply(mode){
+  function apply(mode,animate){
     root.setAttribute('data-theme',mode);
-    btn.setAttribute('aria-pressed', mode==='light' ? 'true' : 'false');
-    label.textContent = mode==='dark' ? 'Day' : 'Night';
-    try{ localStorage.setItem('theme',mode); }catch(e){}
+    btn.setAttribute('aria-pressed',mode==='light'?'true':'false');
+    label.textContent=mode==='dark'?'Day':'Night';
+    try{localStorage.setItem('theme',mode)}catch(e){}
   }
+  var busy=false;
   btn.addEventListener('click',function(){
-    apply(root.getAttribute('data-theme')==='dark' ? 'light' : 'dark');
+    if(busy)return;
+    busy=true;
+    apply(root.getAttribute('data-theme')==='dark'?'light':'dark',true);
+    setTimeout(function(){busy=false},2200);
   });
 })();
 </script>

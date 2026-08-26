@@ -4,505 +4,447 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Weather Station Midea — Smart AC Climate Control</title>
-<meta name="description" content="Arduino-based intelligent climate control system with reverse-engineered Midea IR protocol, dual-sensor monitoring (DHT, HDC1080), and automated heating/cooling/humidification. Full hardware pin map, IR protocol documentation, and deployment guide.">
+<meta name="description" content="ESP32-C3 climate controller that reads room temperature/humidity via HDC1080 and drives an existing Midea split AC purely by IR replay of logic-analyzer-captured remote codes, with an independent heater mode and humidifier relay.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --font-display:"IBM Plex Sans Condensed","Arial Narrow",sans-serif;
+  --font-body:"IBM Plex Sans",-apple-system,"Segoe UI",sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,"Cascadia Code",monospace;
+  --code-bg:#171b22; --code-text:#dfe6ee; --code-dim:#7b8898; --code-accent:#ff8552; --code-rule:#2a323e;
   --accent:var(--copper);
 }
 html[data-theme="dark"]{
   color-scheme:dark;
-  --paper:#191C18;   --ink:#E2E0D4;   --dim:#A9AFA0;
+  --paper:#191C18; --ink:#E2E0D4; --dim:#A9AFA0;
   --line:rgba(226,224,212,.16);
-  --green:#57B48C;   --steel:#86AAC4; --copper:#D28B5A;
-  --brass:#C9A94F;   --slate:#9BA394;
-  --weight:500;
+  --green:#57B48C; --steel:#86AAC4; --copper:#D28B5A; --brass:#C9A94F; --slate:#9BA394;
+  --surface:#20241F; --surface-2:#262B22;
+  --ok:#57c795; --warn:#e3a53a;
 }
 html[data-theme="light"]{
   color-scheme:light;
-  --paper:#E9E7DD;   --ink:#1B1D14;   --dim:#4E5348;
+  --paper:#E9E7DD; --ink:#1B1D14; --dim:#4E5348;
   --line:rgba(27,29,20,.16);
-  --green:#0E5A3E;   --steel:#2E4A5E; --copper:#8F4A1E;
-  --brass:#6F5417;   --slate:#414A42;
-  --weight:600;
+  --green:#0E5A3E; --steel:#2E4A5E; --copper:#8F4A1E; --brass:#6F5417; --slate:#414A42;
+  --surface:#F5F3EA; --surface-2:#EFEDE1;
+  --ok:#227a52; --warn:#a3690a;
 }
-*{box-sizing:border-box}
-body{
-  margin:0 auto; max-width:640px; padding:64px 24px 80px;
-  background:var(--paper); color:var(--ink);
-  font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  font-size:16px; line-height:1.68; -webkit-font-smoothing:antialiased;
-  text-rendering:optimizeLegibility;
-}
-h1{font-size:1.5rem; font-weight:var(--weight); margin:0 0 4px; letter-spacing:.005em}
-.role{font-family:var(--mono); font-size:12.5px; letter-spacing:.05em;
-  color:var(--dim); margin:0 0 28px}
-.band{display:flex; height:5px; margin:0 0 26px; border-radius:2px; overflow:hidden}
-.band i{flex:1}
-.band i:nth-child(1){background:var(--copper)}
-.band i:nth-child(2){background:var(--brass)}
-.band i:nth-child(3){background:var(--green)}
-.intro{margin:0 0 12px}
-section{margin:40px 0 0}
-h2{font-family:var(--mono); font-size:11px; font-weight:600;
-  letter-spacing:.16em; text-transform:uppercase; color:var(--accent);
-  margin:32px 0 16px; padding-bottom:9px; border-bottom:2px solid var(--accent);
-  display:flex; align-items:center; gap:9px}
-h2::before{content:""; width:9px; height:9px; background:var(--accent);
-  border-radius:2px; flex:none}
-h3{font-size:14px; font-weight:var(--weight); margin:18px 0 8px; color:var(--ink)}
-p{margin:0 0 12px; color:var(--dim)}
-code{font-family:var(--mono); font-size:13px; background:rgba(0,0,0,.1);
-  padding:2px 6px; border-radius:2px; color:var(--copper)}
-table{width:100%; border-collapse:collapse; margin:12px 0 20px; font-size:14px}
-th{text-align:left; font-family:var(--mono); font-size:10px; letter-spacing:.08em;
-  text-transform:uppercase; color:var(--accent); border-bottom:2px solid var(--accent);
-  padding:8px 4px; font-weight:600}
-td{border-bottom:1px solid var(--line); padding:8px 4px; color:var(--dim)}
-tr:hover td{background:rgba(255,255,255,.02)}
-.spec{margin:16px 0; padding:12px; border-left:3px solid var(--accent);
-  background:rgba(0,0,0,.05)}
-.spec dt{font-family:var(--mono); font-size:10px; letter-spacing:.08em;
-  text-transform:uppercase; color:var(--accent); margin-bottom:2px}
-.spec dd{margin:0; color:var(--dim); font-size:13px; padding-left:12px}
-pre{background:rgba(0,0,0,.1); padding:12px; border-radius:4px;
-  overflow-x:auto; font-size:12px; line-height:1.4; margin:12px 0}
-ul{margin:0; padding-left:20px; list-style:none}
-li{margin:6px 0; padding-left:12px; position:relative}
-li::before{content:"▪"; position:absolute; left:0; color:var(--accent)}
-.back{display:inline-block; font-family:var(--mono); font-size:11px;
-  letter-spacing:.08em; color:var(--copper); text-decoration:none;
-  margin-bottom:20px}
-.back:hover{color:var(--accent)}
-.theme{position:fixed; top:20px; right:20px; z-index:5;
-  display:flex; align-items:center; gap:8px;
-  background:none; border:1px solid var(--line); border-radius:100px;
-  padding:7px 13px 7px 10px; cursor:pointer; color:var(--dim);
-  font-family:var(--mono); font-size:10.5px; letter-spacing:.12em; text-transform:uppercase;
-  transition:color .3s, border-color .3s}
-.theme:hover{color:var(--ink); border-color:var(--accent)}
-.theme svg{width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:1.6;
-  stroke-linecap:round; flex:none}
-.theme .moon{display:none}
-html[data-theme="light"] .theme .sun{display:none}
-html[data-theme="light"] .theme .moon{display:block}
-body{transition:background-color 1.9s cubic-bezier(.4,0,.2,1)}
-section,h2,h3,p,table,pre,code,.spec{
-  transition:border-color 1.9s cubic-bezier(.4,0,.2,1),
-    background-color 1.9s cubic-bezier(.4,0,.2,1),
-    color 1.9s cubic-bezier(.4,0,.2,1)}
-@media(max-width:520px){
-  table{font-size:12px}
-  th,td{padding:6px 2px}
-}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+a{color:var(--accent);text-decoration-color:color-mix(in srgb,var(--accent) 45%,transparent)}
+a:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+h1,h2,h3{font-family:var(--font-display);font-weight:600;text-wrap:balance;margin:0;color:var(--ink)}
+.eyebrow{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+code,.mono{font-family:var(--font-mono)}
+.shell{display:grid;grid-template-columns:240px minmax(0,1fr);gap:0;max-width:1180px;margin:0 auto}
+@media(max-width:900px){.shell{grid-template-columns:1fr}}
+nav.toc{position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;padding:2.25rem 1.25rem 2rem 1.5rem;border-right:1px solid var(--line)}
+@media(max-width:900px){nav.toc{position:static;height:auto;border-right:none;border-bottom:1px solid var(--line);padding:1.25rem 1.5rem}}
+nav.toc .back{display:inline-flex;align-items:center;gap:.4rem;font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);text-decoration:none;margin-bottom:1.1rem}
+nav.toc .back:hover{color:var(--accent)}
+nav.toc .brand{display:block;font-family:var(--font-display);font-weight:700;font-size:1.05rem;margin-bottom:.2rem}
+nav.toc .brand-sub{display:block;font-size:.8rem;color:var(--dim);margin-bottom:1.75rem}
+nav.toc ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.05rem;counter-reset:sec}
+@media(max-width:900px){nav.toc ol{flex-direction:row;flex-wrap:wrap;gap:.4rem 1rem}}
+nav.toc li{counter-increment:sec}nav.toc a{display:flex;gap:.55rem;padding:.32rem .4rem;border-radius:4px;font-size:.86rem;color:var(--dim);text-decoration:none}
+nav.toc a::before{content:counter(sec,decimal-leading-zero);font-family:var(--font-mono);font-size:.75rem;color:var(--accent);opacity:.75}
+nav.toc a:hover{color:var(--ink);background:var(--surface-2)}
+main{padding:0 0 6rem;min-width:0}
+.hero{padding:3.4rem 3rem 2.6rem;border-bottom:1px solid var(--line)}
+@media(max-width:640px){.hero{padding:2.2rem 1.25rem 2rem}}.hero h1{font-size:clamp(1.9rem,3.4vw,2.7rem)}.hero .dek{max-width:62ch;color:var(--dim);font-size:1.05rem;margin-top:.9rem}
+.meta-row{display:flex;flex-wrap:wrap;gap:.5rem .7rem;margin-top:1.5rem}.chip{font-family:var(--font-mono);font-size:.76rem;padding:.3rem .6rem;border:1px solid var(--line);border-radius:999px;color:var(--dim);background:var(--surface)}
+.chip.link{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 35%,var(--line));text-decoration:none}
+section{padding:2.75rem 3rem;border-bottom:1px solid var(--line)}
+@media(max-width:640px){section{padding:2.1rem 1.25rem}}
+section>.eyebrow{display:block;margin-bottom:.5rem}section>h2{font-size:1.5rem;margin-bottom:1.1rem}
+section>.lead{color:var(--dim);max-width:68ch;margin:-.4rem 0 1.5rem}section p{max-width:70ch}section p+p{margin-top:.9rem}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:1.3rem 1.4rem}.stack{display:flex;flex-direction:column;gap:1rem}.grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+@media(max-width:720px){.grid-2{grid-template-columns:1fr}}
+.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px}table{border-collapse:collapse;width:100%;min-width:480px;background:var(--surface)}
+th,td{text-align:left;padding:.6rem .85rem;border-bottom:1px solid var(--line);font-size:.88rem;vertical-align:top}
+thead th{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);background:var(--surface-2);font-weight:500}
+tbody tr:last-child td{border-bottom:none}td.mono,th.mono{font-family:var(--font-mono)}td.num{font-variant-numeric:tabular-nums;font-family:var(--font-mono)}tbody tr:hover{background:var(--surface-2)}
+pre{margin:0;background:var(--code-bg);color:var(--code-text);border-radius:8px;padding:.95rem 1.1rem;overflow-x:auto;font-family:var(--font-mono);font-size:.83rem;line-height:1.6;border:1px solid var(--code-rule)}
+pre .c{color:var(--code-dim)}pre .k{color:var(--code-accent)}code.pin{background:var(--surface-2);border:1px solid var(--line);border-radius:4px;padding:.08rem .4rem;font-size:.85em}
+.fn-group{margin-bottom:1.6rem}.fn-group:last-child{margin-bottom:0}.fn-group h3{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);font-family:var(--font-mono);font-weight:500;margin-bottom:.7rem;padding-bottom:.5rem;border-bottom:1px solid var(--line)}
+.fn{padding:.9rem 0;border-bottom:1px dashed var(--line)}.fn:last-child{border-bottom:none}.fn .sig{font-family:var(--font-mono);font-size:.86rem;font-weight:500;color:var(--ink)}.fn .sig .name{color:var(--accent)}.fn p{margin:.45rem 0 0;font-size:.92rem;color:var(--dim);max-width:66ch}.fn .note{margin-top:.5rem;font-size:.82rem;color:var(--warn);display:flex;gap:.45rem;max-width:66ch}.fn .note::before{content:"\25B3";flex:none}
+.diagram-card{padding:1.5rem 1.5rem 1.2rem}.diagram-card svg{width:100%;height:auto;display:block}.diagram-caption{font-size:.8rem;color:var(--dim);margin-top:.8rem}
+.quirks{display:flex;flex-direction:column;gap:.9rem}.quirk{display:grid;grid-template-columns:22px 1fr;gap:.7rem}.quirk .mark{color:var(--warn);font-family:var(--font-mono)}.quirk p{margin:0;font-size:.92rem}.quirk .where{color:var(--dim);font-size:.8rem}
+footer{padding:2.5rem 3rem 3.5rem;color:var(--dim);font-size:.85rem}@media(max-width:640px){footer{padding:2rem 1.25rem 3rem}}
+.theme{position:fixed;top:16px;right:16px;z-index:5;display:flex;align-items:center;gap:8px;background:none;border:1px solid var(--line);border-radius:100px;padding:6px 12px 6px 10px;cursor:pointer;color:var(--dim);font-family:var(--font-mono);font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;transition:all .2s}
+.theme:hover{color:var(--ink);border-color:var(--accent)}.theme svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;flex:none}.theme .moon{display:none}
+html[data-theme="light"] .theme .sun{display:none}html[data-theme="light"] .theme .moon{display:block}
+@media(max-width:640px){.theme{top:10px;right:10px;padding:6px 10px}.theme .label{display:none}}
+body{transition:background-color .4s ease}h1,h2,h3,h4,p,a,code,pre,table,table th,table td{transition:color .4s ease,border-color .4s ease,background-color .4s ease}
 </style>
 </head>
 <body>
 
-<button class="theme" id="themeBtn" type="button" aria-pressed="false"
-  aria-label="Switch between day and night">
-  <svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/>
-    <path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6"/></svg>
-  <svg class="moon" viewBox="0 0 24 24" aria-hidden="true">
-    <path d="M20.5 14.6A8.6 8.6 0 0 1 9.4 3.5a8.6 8.6 0 1 0 11.1 11.1z"/></svg>
-  <span class="label">Night</span>
+<button class="theme" id="themeBtn" type="button" aria-pressed="false" aria-label="Toggle theme">
+  <svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6"/></svg>
+  <svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.6A8.6 8.6 0 0 1 9.4 3.5a8.6 8.6 0 1 0 11.1 11.1z"/></svg>
+  <span class="label">Dark</span>
 </button>
 
-<a href="/" class="back">← Back to portfolio</a>
+<div class="shell">
+<nav class="toc" aria-label="Table of contents">
+  <a class="back" href="index.html">&larr; Portfolio</a>
+  <span class="brand">weather_station_midea</span>
+  <span class="brand-sub">Firmware documentation</span>
+  <ol>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#architecture">Architecture</a></li>
+    <li><a href="#pinout">Pin reference</a></li>
+    <li><a href="#states">State machines</a></li>
+    <li><a href="#functions">Functions</a></li>
+    <li><a href="#ir">IR capture &amp; replay</a></li>
+    <li><a href="#constants">Tuning</a></li>
+    <li><a href="#notes">Notes</a></li>
+  </ol>
+</nav>
 
-<h1>Weather Station Midea</h1>
-<p class="role">Smart AC climate control · reverse-engineered IR protocol · dual-sensor monitoring</p>
-<div class="band" aria-hidden="true"><i></i><i></i><i></i></div>
+<main>
+<header class="hero">
+  <span class="eyebrow">Embedded firmware · ESP32-C3 · C++/Arduino · IR</span>
+  <h1>Weather Station Midea</h1>
+  <p class="dek">A closed-loop climate controller that reads room temperature and humidity, computes a heat-index setpoint band, and drives an unmodified Midea split AC unit purely by <strong>replaying captured infrared remote codes</strong> — no serial or wired link into the AC itself. An independent humidifier relay and a jumper-selected heater mode share the same sensor and hysteresis logic.</p>
+  <div class="meta-row">
+    <span class="chip">MCU: ESP32-C3</span>
+    <span class="chip">Sensor: HDC1080 (I²C 0x40)</span>
+    <span class="chip">Display: 16×4 I²C LCD (0x27)</span>
+    <span class="chip">Loop cadence: 1 Hz (blocking)</span>
+    <a class="chip link" href="https://github.com/amd858/weather_station_midea" target="_blank" rel="noopener">github.com/amd858/weather_station_midea ↗</a>
+  </div>
+</header>
 
-<p class="intro">An intelligent climate control system that autonomously manages heating, cooling, and humidity via reverse-engineered Midea IR protocol. Combines environmental monitoring (temperature, humidity, heat index) with sophisticated state machines, DIP switch calibration, and real-time LCD feedback. Supports Arduino, ESP32, STM32, and RP2040 platforms.</p>
-
-<section>
-<h2>Project Purpose</h2>
-<p>This system implements autonomous climate management for residential or commercial spaces by:</p>
-<ul>
-  <li><b>Monitoring conditions</b> via dual-sensor approach (DHT11/22 + HDC1080 option)</li>
-  <li><b>Controlling Midea AC units</b> using decoded 48-bit IR protocol (Pronto format)</li>
-  <li><b>Maintaining comfort zones</b> with threshold-based automation (heating, cooling, humidification)</li>
-  <li><b>Providing calibration</b> via hardware DIP switches (±0.5–3.5°C offset adjustment)</li>
-  <li><b>Displaying status</b> on 16×4 LCD (real-time temp, humidity, mode, AC state)</li>
-  <li><b>Handling failures gracefully</b> with debouncing, bounce detection, and fallback logic</li>
-</ul>
+<section id="overview">
+  <span class="eyebrow">01 · What it does</span>
+  <h2>Overview</h2>
+  <p>The AC unit is treated as a black box: the firmware never talks to it electrically. Instead it captured the unit's own IR remote codes ahead of time — using a 555-timer monostable to clean up the receiver's noisy output and a logic analyzer to record the resulting pulse train — and now simply <em>replays</em> those exact waveforms through an IR LED whenever the climate logic decides the room needs cooling, heating, or the unit should turn off.</p>
+  <p>Every second, an HDC1080 sensor reports temperature and humidity. Humidity is adjusted by a fixed calibration offset, then a heat index is computed and checked against a hysteresis band around a configurable setpoint. Two independent state machines exist for this decision — one for cooling (<code class="pin">ac_processing</code>), one for heating (<code class="pin">heater_processing</code>) — but only one is ever active, chosen by a physical jumper (<code class="pin">HEATER_MODE</code>) read once at boot. A third state machine (<code class="pin">humidifier_processing</code>) runs independently of both, driving a relay purely off room humidity.</p>
+  <p>A bank of four DIP switches lets you nudge the target setpoint by up to ±3.5°C in 0.5° steps without reflashing — read as a binary-weighted offset and applied identically to whichever mode is active.</p>
 </section>
 
-<section>
-<h2>Hardware Architecture</h2>
-
-<h3>Microcontroller Platforms</h3>
-<p><b>Primary:</b> ESP32 (recommended for modern deployments)</p>
-<p><b>Also Supported:</b> Arduino Uno/Nano, ATtiny, STM32 (BluePill), RP2040 (Raspberry Pi Pico)</p>
-<p>Pin mappings for all platforms defined in <code>PinDefinitionsAndMore.h</code></p>
-
-<h3>Environmental Sensors</h3>
-<table>
-  <thead><tr><th>Sensor</th><th>Protocol</th><th>Accuracy</th><th>Range</th><th>Purpose</th></tr></thead>
-  <tbody>
-    <tr><td>DHT11/22</td><td>1-wire digital</td><td>±2°C, ±5% humidity</td><td>-40 to +80°C</td><td>Primary temp/humidity</td></tr>
-    <tr><td>HDC1080</td><td>I²C (0x40)</td><td>±0.2°C, ±2% humidity</td><td>-40 to +125°C</td><td>High-precision (optional)</td></tr>
-  </tbody>
-</table>
-
-<h3>IR Control Components</h3>
-<div class="spec">
-  <dt>IR Transmitter</dt>
-  <dd>940 nm LED driven by 2N2222 transistor; 100–220 Ω current limiting resistor</dd>
-  <dt>Carrier Frequency</dt>
-  <dd>109 kHz (Midea standard); generated via PWM</dd>
-  <dt>Protocol</dt>
-  <dd>Pronto hex format (universal IR remote standard)</dd>
-  <dt>Range</dt>
-  <dd>10–15 meters (typical); line-of-sight to AC unit required</dd>
-  <dt>Transmission Timing</dt>
-  <dd>~100–150 ms per command; 100 ms cooldown between repeated commands</dd>
-</div>
-
-<h3>User Interface</h3>
-<ul>
-  <li><b>LCD Display:</b> 16×4 HD44780 compatible, I²C address 0x27, real-time status</li>
-  <li><b>DIP Switches (4-position):</b> Temperature offset calibration (pins 9–12)</li>
-  <li><b>Mode Toggle:</b> Pin 8 (HEATER_MODE) — switches between heating and cooling operation</li>
-  <li><b>AC Enable Button:</b> Pin 7 (ac_disabled_pin) — manual enable/disable</li>
-</ul>
+<section id="architecture">
+  <span class="eyebrow">02 · Signal flow</span>
+  <h2>Signal architecture</h2>
+  <p class="lead">One sensor feeds three independent decision loops; only the IR LED talks to the AC unit itself.</p>
+  <div class="card diagram-card">
+    <svg viewBox="0 0 940 300" role="img" aria-labelledby="arch-title arch-desc">
+      <title id="arch-title">Signal flow diagram</title>
+      <desc id="arch-desc">HDC1080 sensor and DIP switches feed the ESP32-C3, which drives an IR LED toward the Midea AC unit, a humidifier relay, and a 16 by 4 LCD.</desc>
+      <defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--dim)"/></marker></defs>
+      <g font-family="IBM Plex Mono, monospace" font-size="12">
+        <rect x="10" y="20" width="180" height="44" rx="6" fill="none" stroke="var(--line)"/><text x="100" y="46" fill="var(--ink)" text-anchor="middle">HDC1080 (I²C temp/humidity)</text>
+        <rect x="10" y="80" width="180" height="44" rx="6" fill="none" stroke="var(--line)"/><text x="100" y="106" fill="var(--ink)" text-anchor="middle">4× DIP offset switches</text>
+        <rect x="10" y="140" width="180" height="44" rx="6" fill="none" stroke="var(--line)"/><text x="100" y="166" fill="var(--ink)" text-anchor="middle">Heater-mode jumper + AC-on button</text>
+      </g>
+      <line x1="190" y1="42" x2="365" y2="118" stroke="var(--dim)" marker-end="url(#arrow)"/>
+      <line x1="190" y1="102" x2="365" y2="130" stroke="var(--dim)" marker-end="url(#arrow)"/>
+      <line x1="190" y1="162" x2="365" y2="145" stroke="var(--dim)" marker-end="url(#arrow)"/>
+      <rect x="370" y="100" width="190" height="80" rx="8" fill="color-mix(in srgb,var(--accent) 16%,var(--paper))" stroke="var(--accent)" stroke-width="1.5"/>
+      <text x="465" y="134" fill="var(--ink)" text-anchor="middle" font-family="IBM Plex Sans Condensed" font-size="15" font-weight="600">ESP32-C3</text>
+      <text x="465" y="154" fill="var(--dim)" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11">1s sample-and-decide loop</text>
+      <g font-family="IBM Plex Mono, monospace" font-size="12">
+        <rect x="720" y="10" width="210" height="44" rx="6" fill="none" stroke="var(--line)"/><text x="825" y="36" fill="var(--ink)" text-anchor="middle">IR LED → Midea AC (black box)</text>
+        <rect x="720" y="70" width="210" height="44" rx="6" fill="none" stroke="var(--line)"/><text x="825" y="96" fill="var(--ink)" text-anchor="middle">Humidifier relay</text>
+        <rect x="720" y="130" width="210" height="44" rx="6" fill="none" stroke="var(--line)"/><text x="825" y="156" fill="var(--ink)" text-anchor="middle">16×4 I²C LCD status</text>
+      </g>
+      <line x1="560" y1="120" x2="718" y2="32" stroke="var(--dim)" marker-end="url(#arrow)"/>
+      <line x1="560" y1="140" x2="718" y2="92" stroke="var(--dim)" marker-end="url(#arrow)"/>
+      <line x1="560" y1="155" x2="718" y2="152" stroke="var(--dim)" marker-end="url(#arrow)"/>
+    </svg>
+    <p class="diagram-caption">The AC connection is one-way and open-loop — the firmware has no way to confirm the unit actually received a code, hence the periodic re-send described in Tuning.</p>
+  </div>
 </section>
 
-<section>
-<h2>Pin Configuration (ESP32 Primary)</h2>
-
-<table>
-  <thead><tr><th>Function</th><th>GPIO</th><th>Purpose</th></tr></thead>
-  <tbody>
-    <tr><td>IR Receiver</td><td>15</td><td>Input from demodulated IR receiver (555 timer conditioned)</td></tr>
-    <tr><td>IR Transmitter</td><td>4</td><td>PWM output to IR LED control circuit</td></tr>
-    <tr><td>Tone/Alert</td><td>27</td><td>Piezo buzzer or audible feedback</td></tr>
-    <tr><td>Application Status</td><td>16</td><td>Status indicator (RX2 pin)</td></tr>
-    <tr><td>Humidifier Relay</td><td>4</td><td>Active HIGH to engage dehumidifier</td></tr>
-    <tr><td>DIP Switch A</td><td>9</td><td>+0.5°C offset bit</td></tr>
-    <tr><td>DIP Switch B</td><td>10</td><td>+1.0°C offset bit</td></tr>
-    <tr><td>DIP Switch C</td><td>11</td><td>+2.0°C offset bit</td></tr>
-    <tr><td>DIP Switch D</td><td>12</td><td>Invert offset (negate sum)</td></tr>
-    <tr><td>Heater Mode Toggle</td><td>8</td><td>LOW=Cooling, HIGH=Heating</td></tr>
-    <tr><td>AC Disable Button</td><td>7</td><td>Momentary contact; active LOW</td></tr>
-    <tr><td>Humidifier Indication</td><td>14</td><td>Status LED or relay feedback</td></tr>
-  </tbody>
-</table>
-
-<h3>I²C Devices</h3>
-<div class="spec">
-  <dt>HDC1080 Sensor</dt>
-  <dd>Address 0x40 (if present); optional upgrade for precision</dd>
-  <dt>LCD Display</dt>
-  <dd>Address 0x27; 16×4 configuration with backlight</dd>
-  <dt>I²C Bus</dt>
-  <dd>Standard Arduino SCL/SDA pins (platform-dependent; typically A4/A5 on Nano)</dd>
-</div>
+<section id="pinout">
+  <span class="eyebrow">03 · Hardware map</span>
+  <h2>Pin reference</h2>
+  <p class="lead">DIP and mode pins use <code class="pin">INPUT_PULLUP</code> and are read inverted (<code class="pin">!digitalRead</code>) — switch closed = logic true.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Pin</th><th>Symbol</th><th>Mode</th><th>Function</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">GPIO4</td><td class="mono">HUMIDIFIER_OFF_PIN</td><td class="mono">OUTPUT</td><td>Humidifier relay — driven HIGH to turn the humidifier <em>on</em> despite the pin's name</td></tr>
+        <tr><td class="mono">GPIO7</td><td class="mono">ac_disabled_pin</td><td class="mono">INPUT_PULLUP</td><td>Front-panel "AC on" button, read inverted; despite the name it enables the active mode, not disables it</td></tr>
+        <tr><td class="mono">GPIO7</td><td class="mono">IR_SEND_PIN</td><td class="mono">IRremote TX</td><td>IRremote's default send pin for ESP32-C3 — shares the number with <code class="pin">ac_disabled_pin</code> above (see Notes)</td></tr>
+        <tr><td class="mono">GPIO8</td><td class="mono">HEATER_MODE</td><td class="mono">INPUT_PULLUP</td><td>Boot-time jumper: selects heater logic vs. AC/cooling logic for the whole session</td></tr>
+        <tr><td class="mono">GPIO9</td><td class="mono">dip_switch_a</td><td class="mono">INPUT_PULLUP</td><td>Setpoint offset bit, weight 0.5°C</td></tr>
+        <tr><td class="mono">GPIO10</td><td class="mono">dip_switch_b</td><td class="mono">INPUT_PULLUP</td><td>Setpoint offset bit, weight 1.0°C</td></tr>
+        <tr><td class="mono">GPIO11</td><td class="mono">dip_switch_c</td><td class="mono">INPUT_PULLUP</td><td>Setpoint offset bit, weight 2.0°C</td></tr>
+        <tr><td class="mono">GPIO12</td><td class="mono">dip_switch_d</td><td class="mono">INPUT_PULLUP</td><td>Sign bit — negates the combined a+b+c offset</td></tr>
+        <tr><td class="mono">GPIO14</td><td class="mono">humidifier_indication</td><td class="mono">— (unset)</td><td>Defined but never given a <code class="pin">pinMode</code> or written — dead declaration</td></tr>
+        <tr><td class="mono">I²C bus</td><td class="mono">SDA/SCL</td><td class="mono">Wire</td><td>Shared by the HDC1080 sensor (0x40) and the LCD backpack (0x27)</td></tr>
+      </tbody>
+    </table>
+  </div>
 </section>
 
-<section>
-<h2>Midea IR Protocol</h2>
+<section id="states">
+  <span class="eyebrow">04 · Control flow</span>
+  <h2>State machines</h2>
+  <p class="lead">All three machines share the same debounce shape: a steady state, a "bouncing" transitional state that must hold for several ticks before committing, and a fault/disabled branch.</p>
 
-<h3>48-Bit Command Structure</h3>
-<pre>Bits 0–3:   Power (0=OFF, 1=ON)
-Bits 4–7:   Mode (0=Cool, 1=Dry, 2=Fan, 3=Heat)
-Bits 8–13:  Temperature (6 bits, range 16–31°C)
-Bits 14–16: Fan Speed (0=Auto, 1=Low, 2=Mid, 3=High)
-Bits 17–20: Swing (0=OFF, 1=ON) — vertical louver auto-swing
-Bits 21–23: Reserved (zero padding)</pre>
+  <div class="stack" style="margin-bottom:2rem">
+    <h3 style="font-family:var(--font-mono);font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);font-weight:500">ac_processing — cooling hysteresis (active when HEATER_MODE jumper is open)</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Enum value</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">AC_OFF</td><td>Idle; re-sends the "off" IR code every REPEAT_ACTION_INTERVAL as a keep-alive</td></tr>
+          <tr><td class="mono">BOUNCING_FOR_AC_ON</td><td>Heat index above max and humidity above threshold for &gt; MAX_BOUNCE_COUNT ticks</td></tr>
+          <tr><td class="mono">AC_ON</td><td>Cooling active; re-sends the "cool" IR code periodically as a keep-alive</td></tr>
+          <tr><td class="mono">BOUNCING_FOR_AC_OFF</td><td>Heat index below min or humidity below zero-level for &gt; MAX_BOUNCE_COUNT ticks</td></tr>
+          <tr><td class="mono">BOUNCING_FOR_AC_DISABLE</td><td>Front-panel button released — debounced before honoring a manual power-off</td></tr>
+          <tr><td class="mono">AC_DISABLED</td><td>Manually disabled via the front-panel button; climate logic paused</td></tr>
+          <tr><td class="mono">BOUNCING_FOR_AC_ENABLE</td><td>Front-panel button pressed while disabled — debounced re-enable</td></tr>
+          <tr><td class="mono">COOL_TEMPERATURE_SENSOR_FAULT</td><td>HDC1080 reading out of plausible range; no IR sent, display-only</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 
-<h3>Temperature Setpoints</h3>
-<table>
-  <thead><tr><th>Mode</th><th>Supported Temps</th></tr></thead>
-  <tbody>
-    <tr><td>Heating</td><td>16°C, 17°C, 19°C, 20°C, 22°C (+ OFF)</td></tr>
-    <tr><td>Cooling</td><td>25°C, 26°C, 27°C, 28°C, 30°C (+ OFF)</td></tr>
-  </tbody>
-</table>
+  <div class="stack" style="margin-bottom:2rem">
+    <h3 style="font-family:var(--font-mono);font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);font-weight:500">heater_processing — heating hysteresis (active when HEATER_MODE jumper is closed)</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Enum value</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">HEATING_DISABLE</td><td>Idle; room temp above min_temp, or waiting for the enable debounce</td></tr>
+          <tr><td class="mono">BOUNCING_FOR_HEATING_ENABLE</td><td>Room temp below min_temp for &gt; MAX_BOUNCE_COUNT ticks</td></tr>
+          <tr><td class="mono">HEATING_ENABLE</td><td>Heating active; re-sends the "heat" IR code periodically</td></tr>
+          <tr><td class="mono">BOUNCING_FOR_HEATING_DISABLE</td><td>Room temp above max_temp for &gt; MAX_BOUNCE_COUNT ticks</td></tr>
+          <tr><td class="mono">HEATER_OFF / BOUNCING_FOR_HEATER_ON / BOUNCING_FOR_HEATER_OFF</td><td>Front-panel button debounce chain, mirrors the AC branch</td></tr>
+          <tr><td class="mono">HEATER_TEMPERATURE_SENSOR_FAULT</td><td>HDC1080 reading out of plausible range; no IR sent, display-only</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 
-<h3>Pronto Format</h3>
-<div class="spec">
-  <dt>Format</dt>
-  <dd>Hexadecimal; two-part IR commands (Part A + Part B)</dd>
-  <dt>Part A</dt>
-  <dd>100–114 phase units (38 kHz carrier frequency encoding)</dd>
-  <dt>Part B</dt>
-  <dd>50 phase units (command tail)</dd>
-  <dt>Buffer Size</dt>
-  <dd>270 bytes per Pronto code; stored in PROGMEM to save RAM</dd>
-  <dt>Transmission</dt>
-  <dd>Raw PWM via <code>IrSender.sendPronto()</code>; repeat 3 times (NUMBER_OF_REPEATS)</dd>
-</div>
-
-<h3>Auto-Repeat Logic</h3>
-<p>When AC or heater is in active (ON) state, the system re-transmits commands every 10 minutes (600,000 ms) to compensate for IR signal degradation or receiver interference. This ensures reliable continuous operation even if a single transmission packet is lost.</p>
+  <div class="stack">
+    <h3 style="font-family:var(--font-mono);font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);font-weight:500">humidifier_processing — independent of AC/heater mode</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>State</th><th>Behavior</th><th>Next state</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">HUMIDIFIER_OFF</td><td>Idle while the AC/heater is on and humidity is above MIN_HUMD</td><td>HUMIDIFIER_ON_BOUNCE</td></tr>
+          <tr><td class="mono">HUMIDIFIER_ON_BOUNCE</td><td>One-tick confirmation that humidity is still below MIN_HUMD</td><td>HUMIDIFIER_ON</td></tr>
+          <tr><td class="mono">HUMIDIFIER_ON</td><td>Relay energized; waits for humidity to exceed MAX_HUMD</td><td>HUMIDIFIER_OFF_BOUNCE</td></tr>
+          <tr><td class="mono">HUMIDIFIER_OFF_BOUNCE</td><td>One-tick confirmation before de-energizing the relay</td><td>HUMIDIFIER_OFF</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </section>
 
-<section>
-<h2>Software Architecture</h2>
+<section id="functions">
+  <span class="eyebrow">05 · Function reference</span>
+  <h2>Function reference</h2>
 
-<h3>Three Independent State Machines</h3>
+  <div class="fn-group">
+    <h3>Sensing &amp; setpoint</h3>
+    <div class="fn">
+      <div class="sig"><span class="name">Dip_Switch_Offset</span>()</div>
+      <p>Reads the four DIP pins, combines a/b/c as a binary-weighted 0–3.5°C magnitude, and negates it if the sign bit (d) is set. Result is added directly to the active mode's setpoint band.</p>
+      <div class="note">Heater_Dip_Switch_Offset() is an identical, unused duplicate of this function</div>
+    </div>
+    <div class="fn">
+      <div class="sig"><span class="name">ac_processing</span>(min_hidx, max_hidx, room_temp, room_humd, room_hidx, reading_error, ac_on_button_on_box)</div>
+      <p>Cooling-mode hysteresis state machine. Combines a heat-index band with an independent humidity floor before committing to AC_ON.</p>
+    </div>
+    <div class="fn">
+      <div class="sig"><span class="name">heater_processing</span>(min_temp, max_temp, room_temp, reading_error, ac_on_button_on_box)</div>
+      <p>Heating-mode hysteresis state machine, structurally identical to <code class="pin">ac_processing</code> but keyed on raw temperature rather than heat index.</p>
+    </div>
+    <div class="fn">
+      <div class="sig"><span class="name">humidifier_processing</span>(room_humd, air_conditioner_button_is_on)</div>
+      <p>Independent humidity-only hysteresis; only runs while the front-panel button reports the system as on.</p>
+    </div>
+  </div>
 
-<h4>1. AC Cooling Controller</h4>
-<table>
-  <thead><tr><th>State</th><th>Transition Condition</th><th>Action</th></tr></thead>
-  <tbody>
-    <tr><td>OFF</td><td>Heat index &gt; 27.2°C AND humidity &gt; 33%</td><td>→ BOUNCING_FOR_ON</td></tr>
-    <tr><td>ON</td><td>Heat index &lt; 26.8°C OR humidity &lt; 30%</td><td>→ BOUNCING_FOR_OFF</td></tr>
-    <tr><td>DISABLED</td><td>Manual button press</td><td>→ ENABLED</td></tr>
-  </tbody>
-</table>
-<p>Bounce counter: 6 cycles minimum before state change (prevents rapid cycling)</p>
+  <div class="fn-group">
+    <h3>IR dispatch</h3>
+    <div class="fn">
+      <div class="sig"><span class="name">sendProntoFromProgmem</span>(button_code[])</div>
+      <p>Reads the Pronto-format code length from the PROGMEM array header, copies it into a RAM buffer, and calls <code class="pin">irsend.sendPronto()</code>. A fixed 6ms delay follows every send.</p>
+    </div>
+    <div class="fn">
+      <div class="sig"><span class="name">ac_cooling_enable</span>() / <span class="name">ac_cooling_disable</span>() / <span class="name">heating_enable</span>() / <span class="name">heating_disable</span>()</div>
+      <p>Each dispatches one or two captured codes for a <strong>fixed setpoint</strong> baked into the capture (25°C cool, 22°C heat) — the DIP-switch offset changes when these fire, not what temperature they command the AC to.</p>
+    </div>
+    <div class="fn">
+      <div class="sig"><span class="name">ac_on_sensor_fault</span>() / <span class="name">heater_on_sensor_fault</span>()</div>
+      <p>Fault handlers for an out-of-range sensor reading.</p>
+      <div class="note">Both bodies are fully commented out — no IR command is sent on sensor fault, the unit is simply left in whatever state it was already in</div>
+    </div>
+  </div>
 
-<h4>2. Heater Controller</h4>
-<table>
-  <thead><tr><th>State</th><th>Trigger</th><th>Disable</th></tr></thead>
-  <tbody>
-    <tr><td>ENABLE</td><td>Room temp &lt; 19.8°C (min_temp)</td><td>Room temp &gt; 20.2°C (max_temp)</td></tr>
-    <tr><td>DISABLE</td><td>Manual mode toggle (pin 8)</td><td>—</td></tr>
-  </tbody>
-</table>
-<p>Bounce counter: 6 cycles; prevents compressor short-cycling</p>
-
-<h4>3. Humidifier Controller</h4>
-<table>
-  <thead><tr><th>State</th><th>Activation</th><th>Deactivation</th></tr></thead>
-  <tbody>
-    <tr><td>ON</td><td>Humidity &lt; 39% (MIN_HUMD)</td><td>Humidity &gt; 43% (MAX_HUMD)</td></tr>
-    <tr><td>OFF</td><td>—</td><td>AC disabled OR humidity exceeds MAX</td></tr>
-  </tbody>
-</table>
-<p>GPIO-driven relay; only active when AC unit is enabled</p>
-
-<h3>Core Firmware Modules</h3>
-<div class="spec">
-  <dt>midea_ac.ino (738 lines)</dt>
-  <dd>Main controller; orchestrates all three state machines, sensor reads, LCD updates, IR transmission</dd>
-</div>
-
-<div class="spec">
-  <dt>PinDefinitionsAndMore.h</dt>
-  <dd>Multi-platform pin mapping (10+ boards); selects correct pins based on board type</dd>
-</div>
-
-<div class="spec">
-  <dt>IR Transmission Functions</dt>
-  <dd><code>ac_cooling_enable()</code>, <code>ac_cooling_disable()</code>, <code>heating_enable()</code>, <code>heating_disable()</code>, <code>humidifier_on()</code>, <code>humidifier_off()</code></dd>
-</div>
-
-<div class="spec">
-  <dt>Display Functions</dt>
-  <dd><code>ac_state_lcd()</code>, <code>heater_state_lcd()</code>, LCD refresh with real-time temp/humidity/mode</dd>
-</div>
-
-<div class="spec">
-  <dt>Calibration</dt>
-  <dd><code>Dip_Switch_Offset()</code> — reads 4-position switches; computes ±0.5–3.5°C adjustment</dd>
-</div>
+  <div class="fn-group">
+    <h3>Display &amp; status</h3>
+    <div class="fn">
+      <div class="sig"><span class="name">ac_state_lcd</span>() / <span class="name">heater_state_lcd</span>()</div>
+      <p>Map the active enum to a 16-character LCD-safe status string, e.g. <code class="pin">"BOUNC_FOR_AC_OFF"</code>.</p>
+    </div>
+    <div class="fn">
+      <div class="sig"><span class="name">repeat_action_remaining_time_string_get</span>()</div>
+      <p>Formats the countdown to the next periodic IR keep-alive resend as <code class="pin">mm:ss</code> for the top-right of the LCD.</p>
+    </div>
+  </div>
 </section>
 
-<section>
-<h2>Configuration Parameters</h2>
+<section id="ir">
+  <span class="eyebrow">06 · IR capture &amp; replay</span>
+  <h2>IR capture &amp; replay</h2>
+  <p class="lead">Rather than implementing Midea's IR bit protocol from a spec, the codes were captured directly from the unit's own remote and are replayed byte-for-byte.</p>
+  <div class="grid-2">
+    <div class="card">
+      <h4>Capture pipeline</h4>
+      <p style="max-width:none;font-size:.92rem;color:var(--dim)">1. Remote's IR receiver diode feeds a 555-timer monostable, which cleans bursty/noisy pulses into one uniform pulse per transition.<br>2. A logic analyzer + PulseView (sigrok) records the cleaned waveform at 1 MHz.<br>3. Transitions are exported as timestamped high/low durations — a Gray-code-like edge list.<br>4. An offline script converts the edge list into Pronto hex and a PROGMEM <code class="pin">uint16_t[]</code> array.</p>
+    </div>
+    <div class="card">
+      <h4>Runtime replay</h4>
+      <pre><span class="k">const</span> PROGMEM <span class="k">uint16_t</span> cool_25_on_a[] = {
+  <span class="c">0, 109, 100, 0, 168, 166, 21, 61, …</span>
+};
+sendProntoFromProgmem((<span class="k">uint16_t*</span>)(cool_25_on_a));
+sendProntoFromProgmem((<span class="k">uint16_t*</span>)(cool_25_on_b));
+<span class="c">// most commands are captured as an "a" and "b" half</span></pre>
+    </div>
+  </div>
+  <p style="margin-top:1.25rem">Six codes are baked in: <code class="pin">cool_25_off</code>, <code class="pin">cool_25_on_a/b</code>, <code class="pin">heat_22_off</code>, <code class="pin">heat_22_on_a/b</code>. There is no general-purpose "set to N°C" command — the firmware always commands the same two fixed setpoints, using its own sensor loop (not the AC's internal thermostat) to decide when those commands fire.</p>
+</section>
 
-<h3>Temperature Control (Heater)</h3>
-<div class="spec">
-  <dt>Base min_temp</dt>
-  <dd>19.8°C (adjustable via DIP switches ±0.5–3.5°C)</dd>
-  <dt>Base max_temp</dt>
-  <dd>20.2°C (defines comfort band width of 0.4°C)</dd>
-  <dt>Trigger Logic</dt>
-  <dd>If room &lt; min_temp → activate heater; if &gt; max_temp → stop</dd>
+<section id="constants">
+  <span class="eyebrow">07 · Tuning constants</span>
+  <h2>Tuning constants</h2>
+  <p class="lead">All thresholds are plain globals at the top of the sketch.</p>
+
+  <div class="grid-2">
+    <div class="card">
+      <h4>Cooling band (heat index, °C)</h4>
+      <pre><span class="k">const float</span> HC_MAX_HIDEX = <span class="c">27.2</span>;
+<span class="k">const float</span> HC_MIN_HIDEX = <span class="c">26.8</span>;
+<span class="k">const float</span> ABOVE_ZERO_LEVEL_HUMD = <span class="c">33</span>;
+<span class="k">const float</span> ZERO_LEVEL_HUMD = <span class="c">30</span>;</pre>
+      <p><strong>Tune if:</strong> AC cycles too often → widen the 0.4° band. Never triggers → check the humidity gate too.</p>
+    </div>
+    <div class="card">
+      <h4>Heating band (room temp, °C)</h4>
+      <pre>min_temp = <span class="c">19.8</span> + dip_offset;
+max_temp = <span class="c">20.2</span> + dip_offset;</pre>
+      <p><strong>Tune if:</strong> Room runs cold/hot vs. the DIP-switch offset expectation — recheck sensor calibration first.</p>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-top:1rem">
+    <div class="card">
+      <h4>Humidifier band (% RH)</h4>
+      <pre><span class="k">const float</span> MIN_HUMD = <span class="c">39</span>;  <span class="c">// was 55</span>
+<span class="k">const float</span> MAX_HUMD = <span class="c">43</span>;  <span class="c">// was 69</span></pre>
+      <p>Commented-out prior values (55/69) suggest the band was retuned significantly lower at some point.</p>
+    </div>
+    <div class="card">
+      <h4>Debounce &amp; timing</h4>
+      <pre><span class="k">const int</span> MAX_BOUNCE_COUNT = <span class="c">6</span>;      <span class="c">// ~6s hysteresis debounce</span>
+<span class="k">const int</span> BUTTON_BOUNCE_COUNT = <span class="c">1</span>;   <span class="c">// ~1s button debounce</span>
+<span class="k">const long</span> REPEAT_ACTION_INTERVAL = <span class="c">600000</span>; <span class="c">// 10 min IR keep-alive</span></pre>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:1rem">
+    <h4>Sensor validity gate</h4>
+    <pre><span class="k">if</span> ((room_temp &gt; <span class="c">10</span> &amp;&amp; room_temp &lt; <span class="c">60</span>) &amp;&amp; (room_humd &gt; <span class="c">20</span> &amp;&amp; room_humd &lt; <span class="c">95</span>)) {
+  room_hidx = dht.computeHeatIndex(room_temp, room_humd, <span class="k">false</span>);
+  reading_error = !(room_hidx &gt;= <span class="c">1</span> &amp;&amp; room_hidx &lt;= <span class="c">95</span>);
+} <span class="k">else</span> { reading_error = <span class="k">true</span>; }
+<span class="c">// room_humd is read with a fixed -15 calibration offset applied first</span></pre>
+  </div>
+</section>
+
+<section id="notes">
+  <span class="eyebrow">08 · Notes &amp; known quirks</span>
+  <h2>Notes &amp; known quirks</h2>
+
+  <div class="quirks">
+    <div class="quirk">
+      <div class="mark">⚠</div>
+      <div>
+        <p><strong>IR send pin collides with the front-panel button pin:</strong> IRremote's default <code class="pin">IR_SEND_PIN</code> for ESP32-C3 is GPIO7 — the same GPIO number assigned to <code class="pin">ac_disabled_pin</code>. If both are wired as documented, one of them needs to be remapped in <code class="pin">PinDefinitionsAndMore.h</code>.</p>
+        <div class="where">See <code class="pin">PinDefinitionsAndMore.h</code>, <code class="pin">#define ac_disabled_pin 7</code></div>
+      </div>
+    </div>
+
+    <div class="quirk">
+      <div class="mark">⚠</div>
+      <div>
+        <p><strong>Sensor fault handlers are no-ops:</strong> <code class="pin">ac_on_sensor_fault()</code> and <code class="pin">heater_on_sensor_fault()</code> have their IR-send bodies fully commented out, so a sensor fault freezes the AC/heater in its last commanded state rather than forcing it off.</p>
+        <div class="where">See <code class="pin">ac_on_sensor_fault()</code>, <code class="pin">heater_on_sensor_fault()</code></div>
+      </div>
+    </div>
+
+    <div class="quirk">
+      <div class="mark">ℹ</div>
+      <div>
+        <p><strong>"HUMIDIFIER_OFF_PIN" is driven HIGH to turn the humidifier on:</strong> the naming reads as an active-off pin but <code class="pin">humidifier_on()</code> sets it HIGH and <code class="pin">humidifier_off()</code> sets it LOW.</p>
+        <div class="where">See <code class="pin">humidifier_on()</code>, <code class="pin">humidifier_off()</code></div>
+      </div>
+    </div>
+
+    <div class="quirk">
+      <div class="mark">ℹ</div>
+      <div>
+        <p><strong>DHTesp is used only as a math helper, no DHT sensor is read:</strong> the <code class="pin">dht</code> object is never <code class="pin">begin()</code>'d to a pin — it exists solely to call <code class="pin">computeHeatIndex()</code> on the HDC1080's readings.</p>
+        <div class="where">See global <code class="pin">DHTesp dht;</code> and its one call site in <code class="pin">loop()</code></div>
+      </div>
+    </div>
+
+    <div class="quirk">
+      <div class="mark">ℹ</div>
+      <div>
+        <p><strong>Dead constants from an earlier UI:</strong> <code class="pin">KEY_UP_TIME</code>, <code class="pin">KEY_DOWN_TIME</code>, <code class="pin">TEMP_UP_STEPS</code>, and <code class="pin">temp_down_steps</code> are declared but never referenced anywhere in the sketch.</p>
+        <div class="where">See top-of-file constant declarations</div>
+      </div>
+    </div>
+
+    <div class="quirk">
+      <div class="mark">ℹ</div>
+      <div>
+        <p><strong>Loop is fully blocking:</strong> unlike the other two firmware projects in this portfolio, this sketch ends every iteration with a plain <code class="pin">delay(1000)</code> — there is no non-blocking tick scheduler here.</p>
+        <div class="where">See end of <code class="pin">loop()</code></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>Weather Station Midea firmware documentation. <a href="https://github.com/amd858/weather_station_midea">View on GitHub ↗</a></p>
+  <p><a href="index.html">← Back to portfolio</a></p>
+</footer>
+</main>
 </div>
-
-<h3>Humidity Thresholds</h3>
-<div class="spec">
-  <dt>ABOVE_ZERO_LEVEL_HUMD</dt>
-  <dd>33% (AC on if humidity exceeds)</dd>
-  <dt>MIN_HUMD (Humidifier)</dt>
-  <dd>39% (activate dehumidifier)</dd>
-  <dt>MAX_HUMD (Humidifier)</dt>
-  <dd>43% (deactivate dehumidifier)</dd>
-</div>
-
-<h3>Heat Index Thresholds (AC Cooling)</h3>
-<div class="spec">
-  <dt>HC_MAX_HIDEX</dt>
-  <dd>27.2 (trigger AC cooling)</dd>
-  <dt>HC_MIN_HIDEX</dt>
-  <dd>26.8 (disable AC cooling)</dd>
-  <dt>Combined Condition</dt>
-  <dd>AC activates only if heat index &gt; 27.2 AND humidity &gt; 33%</dd>
-</div>
-
-<h3>Timing Parameters</h3>
-<div class="spec">
-  <dt>MAX_BOUNCE_COUNT</dt>
-  <dd>6 cycles (state machine debounce)</dd>
-  <dt>KEY_DOWN_TIME</dt>
-  <dd>50 ms (button debounce lower threshold)</dd>
-  <dt>KEY_UP_TIME</dt>
-  <dd>250 ms (button debounce upper threshold)</dd>
-  <dt>REPEAT_ACTION_INTERVAL</dt>
-  <dd>600,000 ms (10 minutes — re-transmit active commands)</dd>
-</div>
-
-<h3>DIP Switch Calibration</h3>
-<pre>Switch A: +0.5°C
-Switch B: +1.0°C
-Switch C: +2.0°C
-Switch D: Invert (negate total)
-
-Examples:
-  A+B set → +1.5°C offset
-  A+B+C set → +3.5°C offset
-  D alone → -0°C (no offset)
-  A+D set → -0.5°C offset</pre>
-</section>
-
-<section>
-<h2>Sensor Data Flow</h2>
-
-<h3>Reading Sequence (Main Loop)</h3>
-<ol style="padding-left:20px">
-  <li>Read DHT11/22 (wait ≥2 seconds between reads)</li>
-  <li>Read HDC1080 (I²C, if present)</li>
-  <li>Calculate heat index from temp + humidity</li>
-  <li>Compare against thresholds</li>
-  <li>Execute AC, heater, humidifier state machines</li>
-  <li>Transmit IR command (if state changed)</li>
-  <li>Update LCD with current status</li>
-  <li>Check button inputs and DIP switch calibration</li>
-  <li>Sleep/delay until next cycle</li>
-</ol>
-
-<h3>Error Handling</h3>
-<ul>
-  <li><b>Sensor Failure:</b> Caches last valid reading; retries on next cycle</li>
-  <li><b>IR Transmission Fault:</b> Retries up to 3 times before alerting user</li>
-  <li><b>AC Non-Response:</b> Logs failed command; suggests manual intervention</li>
-  <li><b>Button Glitch:</b> Software debouncing with configurable thresholds prevents false triggers</li>
-</ul>
-</section>
-
-<section>
-<h2>Power Consumption</h2>
-
-<table>
-  <thead><tr><th>Component</th><th>Current Draw</th><th>Notes</th></tr></thead>
-  <tbody>
-    <tr><td>ESP32 Idle</td><td>~50 mA</td><td>Deep sleep mode available (~10 μA)</td></tr>
-    <tr><td>DHT11/22 (active read)</td><td>2 mA peak</td><td>Brief pulse during read transaction</td></tr>
-    <tr><td>HDC1080 (I²C)</td><td>&lt;1 mA</td><td>Negligible power draw</td></tr>
-    <tr><td>LCD Display</td><td>10–50 mA</td><td>Depends on backlight brightness</td></tr>
-    <tr><td>IR LED Transmission</td><td>100 mA peak</td><td>Only during 100–150 ms command burst</td></tr>
-    <tr><td><b>Total Typical</b></td><td><b>~80–150 mA</b></td><td>Varies with LCD backlight &amp; IR duty cycle</td></tr>
-  </tbody>
-</table>
-
-<p><b>Recommended Power Supply:</b> 5V/1A USB or barrel jack (with onboard regulator for 9V input)</p>
-</section>
-
-<section>
-<h2>Dependencies & Libraries</h2>
-
-<table>
-  <thead><tr><th>Library</th><th>Version</th><th>Purpose</th></tr></thead>
-  <tbody>
-    <tr><td>IRremote</td><td>Latest</td><td>IR transmission/reception; Pronto format support</td></tr>
-    <tr><td>ClosedCube_HDC1080</td><td>Any</td><td>HDC1080 temperature/humidity (optional)</td></tr>
-    <tr><td>DHTesp</td><td>Latest</td><td>DHT sensor + heat index calculation</td></tr>
-    <tr><td>LiquidCrystal_I2C</td><td>Any</td><td>LCD display driver (16×4, address 0x27)</td></tr>
-    <tr><td>Wire</td><td>Arduino Core</td><td>I²C communication</td></tr>
-    <tr><td>EEPROM</td><td>Arduino Core</td><td>Persistent settings (optional)</td></tr>
-  </tbody>
-</table>
-
-<p><b>Board Support:</b> Requires ESP32 board package for primary deployment; other platforms via core-specific installations</p>
-</section>
-
-<section>
-<h2>Deployment & Installation</h2>
-
-<h3>Hardware Assembly</h3>
-<ol style="padding-left:20px">
-  <li>Mount ESP32 on breadboard or PCB</li>
-  <li>Connect DHT11/22 to GPIO 15 with 4.7 kΩ pull-up</li>
-  <li>Connect HDC1080 (optional) to I²C bus (SCL/SDA)</li>
-  <li>Build IR transmitter circuit: IR LED + 2N2222 transistor (base to GPIO 4 via 470 Ω)</li>
-  <li>Wire 555 timer signal conditioning circuit for IR receiver (GPIO 15)</li>
-  <li>Connect LCD via I²C (address 0x27)</li>
-  <li>Wire DIP switches to GPIO 9–12 (with pull-ups)</li>
-  <li>Connect mode toggle to GPIO 8 and AC disable button to GPIO 7</li>
-  <li>Power via 5V/1A USB or barrel jack (9V with regulator)</li>
-</ol>
-
-<h3>Firmware Upload</h3>
-<ol style="padding-left:20px">
-  <li>Install Arduino IDE 1.8.x or later</li>
-  <li>Install ESP32 board package via Boards Manager</li>
-  <li>Install required libraries: IRremote, DHTesp, LiquidCrystal_I2C, ClosedCube_HDC1080</li>
-  <li>Open <code>midea_ac.ino</code> in Arduino IDE</li>
-  <li>Select board type: "ESP32 Dev Module" (or appropriate variant)</li>
-  <li>Configure serial port and upload</li>
-</ol>
-
-<h3>Calibration Steps</h3>
-<ol style="padding-left:20px">
-  <li>Power on; verify LCD displays temperature and humidity</li>
-  <li>Compare DHT reading against reference thermometer</li>
-  <li>If DHT reads high/low, adjust DIP switches to match (±0.5–3.5°C range)</li>
-  <li>Point IR LED at AC unit and press mode button; verify AC responds</li>
-  <li>Test temperature setpoints: adjust min_temp/max_temp in code as needed</li>
-  <li>Verify humidifier threshold behavior (activate at 39%, deactivate at 43%)</li>
-</ol>
-</section>
-
-<section>
-<h2>Testing Checklist</h2>
-<ul>
-  <li>☐ DHT sensor reads temperature &amp; humidity (±2°C accuracy)</li>
-  <li>☐ HDC1080 (if present) reads with expected ±0.2°C precision</li>
-  <li>☐ LCD displays temp, humidity, mode, AC state, heat index in real-time</li>
-  <li>☐ DIP switches adjust temperature offset correctly (±0.5–3.5°C)</li>
-  <li>☐ Mode toggle (pin 8) switches between heating and cooling operation</li>
-  <li>☐ AC disable button (pin 7) toggles AC enable/disable state</li>
-  <li>☐ IR LED transmits; AC unit responds to Cool/Heat/Fan commands</li>
-  <li>☐ AC activates when heat index &gt; 27.2°C AND humidity &gt; 33%</li>
-  <li>☐ AC deactivates when heat index &lt; 26.8°C OR humidity &lt; 30%</li>
-  <li>☐ Heater activates when temp &lt; 19.8°C; deactivates when &gt; 20.2°C</li>
-  <li>☐ Humidifier activates at &lt;39% humidity; deactivates at &gt;43%</li>
-  <li>☐ State machine bounce detection prevents rapid on/off cycling (6-cycle debounce)</li>
-  <li>☐ Auto-repeat logic re-transmits commands every 10 minutes when AC/heater active</li>
-  <li>☐ Button debouncing works; no chattering or false triggers</li>
-  <li>☐ Power consumption measured; within 80–150 mA typical range</li>
-  <li>☐ No memory leaks over 1+ hour runtime; stable operation</li>
-</ul>
-</section>
-
-<section>
-<h2>Resources</h2>
-<p><b>GitHub:</b> <a href="https://github.com/amd858/weather_station_midea" style="color:var(--ink); border-bottom:1px solid var(--copper); text-decoration:none">amd858/weather_station_midea</a></p>
-<p>Includes captured PulseView files (.pvs/.sr), gray code IR data exports, and 555 timer circuit schematics.</p>
-</section>
 
 <script>
 (function(){
   var root=document.documentElement, btn=document.getElementById('themeBtn'), label=btn.querySelector('.label'), saved=null;
-  try{ saved=localStorage.getItem('theme'); }catch(e){}
-  var start = saved || 'dark';
+  try{saved=localStorage.getItem('theme')}catch(e){}
+  var start=saved||'dark';
   apply(start,false);
-  function apply(mode){
+  function apply(mode,animate){
     root.setAttribute('data-theme',mode);
-    btn.setAttribute('aria-pressed', mode==='light' ? 'true' : 'false');
-    label.textContent = mode==='dark' ? 'Day' : 'Night';
-    try{ localStorage.setItem('theme',mode); }catch(e){}
+    btn.setAttribute('aria-pressed',mode==='light'?'true':'false');
+    label.textContent=mode==='dark'?'Day':'Night';
+    try{localStorage.setItem('theme',mode)}catch(e){}
   }
+  var busy=false;
   btn.addEventListener('click',function(){
-    apply(root.getAttribute('data-theme')==='dark' ? 'light' : 'dark');
+    if(busy)return;
+    busy=true;
+    apply(root.getAttribute('data-theme')==='dark'?'light':'dark',true);
+    setTimeout(function(){busy=false},2200);
   });
 })();
 </script>
