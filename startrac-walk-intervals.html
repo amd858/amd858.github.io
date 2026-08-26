@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StarTrac Walk Intervals Controller</title>
+<meta name="description" content="Arduino Uno/Nano HIIT controller for StarTrac treadmill with non-blocking interval scheduler, speed ramping via relay control, fake step injection, and live display feedback.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --accent:var(--brass);
+}
+html[data-theme="dark"]{
+  color-scheme:dark;
+  --paper:#191C18;   --ink:#E2E0D4;   --dim:#A9AFA0;
+  --line:rgba(226,224,212,.16);
+  --green:#57B48C;   --steel:#86AAC4; --copper:#D28B5A;
+  --brass:#C9A94F;   --slate:#9BA394;
+  --art-mech:.16; --art-trace:.15; --art-pad:.20; --art-leaf:.15;
+  --weight:500;
+}
+html[data-theme="light"]{
+  color-scheme:light;
+  --paper:#E9E7DD;   --ink:#1B1D14;   --dim:#4E5348;
+  --line:rgba(27,29,20,.16);
+  --green:#0E5A3E;   --steel:#2E4A5E; --copper:#8F4A1E;
+  --brass:#6F5417;   --slate:#414A42;
+  --art-mech:.20; --art-trace:.18; --art-pad:.24; --art-leaf:.20;
+  --weight:600;
+}
+*{box-sizing:border-box}
+body{
+  margin:0 auto; max-width:640px; padding:64px 24px 80px;
+  background:var(--paper); color:var(--ink);
+  font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:16px; line-height:1.68; -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+h1{font-size:1.5rem; font-weight:var(--weight); margin:0 0 4px; letter-spacing:.005em; color:var(--ink)}
+h2{font-family:var(--mono); font-size:11px; font-weight:600; letter-spacing:.16em; text-transform:uppercase; color:var(--accent);
+  margin:48px 0 18px; padding-bottom:9px; border-bottom:2px solid var(--accent); display:flex; align-items:center; gap:9px}
+h3{font-size:15px; font-weight:var(--weight); margin:24px 0 12px; color:var(--ink)}
+p{margin:0 0 12px; color:var(--dim); line-height:1.65}
+a{color:var(--accent); text-decoration:none; border-bottom:1px solid var(--accent)}
+a:hover{color:var(--ink)}
+code{font-family:var(--mono); background:rgba(0,0,0,.12); padding:2px 6px; border-radius:2px; font-size:14px}
+pre{background:rgba(0,0,0,.12); padding:12px; border-radius:3px; overflow-x:auto; font-family:var(--mono); font-size:13px;
+  line-height:1.5; margin:0 0 14px; border-left:2px solid var(--accent)}
+table{width:100%; border-collapse:collapse; margin:0 0 14px; font-size:14px}
+table th{text-align:left; padding:9px 6px; border-bottom:2px solid var(--accent); font-family:var(--mono);
+  font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent)}
+table td{padding:8px 6px; border-bottom:1px solid var(--line)}
+.role{font-family:var(--mono); font-size:12.5px; letter-spacing:.05em; color:var(--dim); margin:0 0 24px}
+.intro{margin:0 0 12px; font-size:15px}
+.section{margin:0 0 32px}
+.back{font-family:var(--mono); font-size:12px; margin-bottom:28px}
+.back a{border-bottom:1px dotted; color:var(--dim)}
+.back a:hover{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+
+.theme{position:fixed; top:20px; right:20px; z-index:5; display:flex; align-items:center; gap:8px;
+  background:none; border:1px solid var(--line); border-radius:100px; padding:7px 13px 7px 10px; cursor:pointer;
+  color:var(--dim); font-family:var(--mono); font-size:10.5px; letter-spacing:.12em; text-transform:uppercase;
+  transition:color .3s, border-color .3s}
+.theme:hover{color:var(--ink); border-color:var(--accent)}
+.theme svg{width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:1.6; stroke-linecap:round; flex:none}
+.theme .moon{display:none}
+html[data-theme="light"] .theme .sun{display:none}
+html[data-theme="light"] .theme .moon{display:block}
+@media(max-width:520px){.theme{top:12px; right:12px; padding:7px 10px} .theme .label{display:none}}
+
+body{transition:background-color 1.9s cubic-bezier(.4,0,.2,1)}
+h1,h2,h3,p,a,code,pre,table,table th,table td{transition:color .45s linear .8s, border-color .45s linear .8s, background-color .45s linear .8s}
+.theme{transition:color .45s linear .8s, border-color 1.9s cubic-bezier(.4,0,.2,1)}
+
+@media(prefers-reduced-motion:reduce){
+  body,h1,h2,h3,p,a,code,pre,table,table th,table td,.theme{
+    transition:none;
+  }
+}
+</style>
+</head>
+<body>
+
+<button class="theme" id="themeBtn" type="button" aria-pressed="false" aria-label="Switch between day and night">
+  <svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/>
+    <path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6"/></svg>
+  <svg class="moon" viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M20.5 14.6A8.6 8.6 0 0 1 9.4 3.5a8.6 8.6 0 1 0 11.1 11.1z"/></svg>
+  <span class="label">Night</span>
+</button>
+
+<div class="back"><a href="index.html">← Back to portfolio</a></div>
+
+<h1>StarTrac Walk Intervals</h1>
+<p class="role">Arduino Uno/Nano · HIIT interval controller · relay speed control · non-blocking state machines</p>
+
+<p class="intro">Arduino firmware that turns a StarTrac treadmill into a self-driving HIIT walking-desk controller. The system physically presses the treadmill's +/− buttons via relays to ramp speed up and down, drives a vibration motor to fake pedometer step counts, and runs a full high/rest interval scheduler with live countdown display. No modification to the treadmill itself—the controller sits between an external button panel and the treadmill's control board, driven entirely from a single ATmega-class MCU with a non-blocking main loop.</p>
+
+<div class="section">
+<h2>Core Features</h2>
+<h3>Speed Control via Virtual Button Presses</h3>
+<p>The treadmill's stock +/− buttons are driven through relay/optocoupler outputs. Speed ramping uses a two-phase strategy: up to 3 single "jump" presses for fine adjustments, then batched long-presses that hold the button through a run of steps, computed to land on safe checkpoint speeds. Every intermediate speed is streamed out over SoftwareSerial for external logging.</p>
+
+<h3>HIIT Interval Engine</h3>
+<p>A state machine alternates between <code>HIIT_REST</code> (recovery pace) and <code>HIIT_HIGH</code> (interval pace) phases on configurable duration tables. A 10ms tick counter drives the countdown, which is displayed live on the TM1637 4-digit display. Speed automatically ramps at each transition without user input.</p>
+
+<h3>Fake Step Injection</h3>
+<p>A second state machine pulses the linear/vibration motor to simulate footfalls for an attached pedometer, timed to the belt's real cadence. Step injection automatically pauses during rest and high-intensity phases so step counts stay realistic and don't double-count during active intervals.</p>
+
+<h3>Extreme Mode / Live Overrides</h3>
+<p>A debounced extreme-mode button lets you cycle interval duration presets or bump the interval speed tier on the fly, mid-session, without stopping the belt. This makes it possible to adjust workout intensity without interruption.</p>
+
+<h3>Adaptive Rest Extension</h3>
+<p>A dedicated wait button extends the rest phase in real time if you're not yet back in position. The ready LED signals when it's safe to end the rest early, so the next high-intensity phase never starts before you're ready.</p>
+
+<h3>Fully Non-Blocking I/O</h3>
+<p>All physical buttons (start/stop, extreme mode, wait) are handled through explicit debounce state machines. The main loop runs at 10ms ticks with no blocking <code>delay()</code> calls in the treadmill or step state machines—only the low-level virtual button press helpers use bounded delays to match real relay actuation timing.</p>
+</div>
+
+<div class="section">
+<h2>Treadmill State Machine</h2>
+<p>Behavior is driven by <code>treadmill_state</code>, transitioning only on debounced button edges:</p>
+<table>
+<thead>
+<tr><th>State</th><th>Trigger</th><th>Behavior</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>STOP</strong></td><td>Initial state</td><td>Idle; belt off, display shows the next interval duration.</td></tr>
+<tr><td><strong>BOUNCING_BEFORE_CONSTANT_SPEED</strong></td><td>Start button pressed</td><td>Debounce gate; blocks transition noise.</td></tr>
+<tr><td><strong>CONSTANT_SPEED</strong></td><td>Debounce elapses</td><td>Belt ramps to the first constant-speed tier; step counting and speed cycling active via the extreme button.</td></tr>
+<tr><td><strong>BOUNCING_BEFORE_HIIT_REST</strong></td><td>Start pressed again</td><td>Debounce gate.</td></tr>
+<tr><td><strong>HIIT_REST</strong></td><td>Debounce elapses</td><td>Belt drops to recovery pace; countdown displayed; ready LED signals when it's safe to end the rest early.</td></tr>
+<tr><td><strong>HIIT_HIGH</strong></td><td>Rest countdown elapses</td><td>Belt ramps to the current interval speed tier; countdown displayed; step injection paused.</td></tr>
+<tr><td><strong>BOUNCING_BEFORE_STOP</strong></td><td>Stop pressed</td><td>Debounce gate; clears back to STOP.</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="section">
+<h2>Hardware Configuration Pin Map</h2>
+<pre>START_BUTTON_PIN       2      External start button
+STOP_BUTTON_PIN        3      External stop button
+TREADMILL_PLUS         4      Relay → treadmill's own "+" button
+TREADMILL_STOP         5      Relay → treadmill's own "stop" button
+TREADMILL_START        6      Relay → treadmill's own "start" button
+MOTOR_PIN_2            7      Fake-step vibration/linear motor
+FAN_CLOCK_ENABLE_PIN   8      Cooling fan / PIR timer enable output
+BUZZER                 9      Audio feedback
+TREADMILL_MINUS       10      Relay → treadmill's own "−" button
+WAIT_BUTTON_PIN       11      "I'm ready" button during rest phase
+EXTREME_MODE_BUTTON   12      Cycles speed tier / interval preset
+READY_LED             13      Lit during the last seconds of rest
+DIO                   A4      TM1637 display data
+CLK                   A5      TM1637 display clock
+DIP_BIT_1             A1      DIP switch configuration bits
+DIP_BIT_2             A2
+DIP_BIT_3             A3</pre>
+</div>
+
+<div class="section">
+<h2>Speed Tables and Configuration</h2>
+
+<h3>Constant Speed Tier (Walking Mode)</h3>
+<pre>const int CONSTANT_SPEEDS_ARRAY[5] = { 25, 32, 40, 80, 100 };
+// Mapped to: 2.5, 3.2, 4.0, 8.0, 10.0 km/h</pre>
+
+<h3>HIIT High-Intensity Speeds</h3>
+<pre>const int HIIT_HIGH_SPEEDS_ARRAY[8] = { 54, 80, 90, 100, 110, 120, 130, 140 };
+// Mapped to: 5.4, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0 km/h</pre>
+
+<h3>Interval Duration Tables (seconds)</h3>
+<pre>const int HIIT_high_interval_array[10] = { 60, 30, 150, 240, 300, 360, 420, 480, 540, 600 };
+const int HIIT_rest_interval_array[4] = { 60, 64, 120, 180 };
+// Extreme mode button cycles through these presets</pre>
+
+<h3>Virtual Button Press Timing</h3>
+<pre>int on_time = 120;      // Button press hold duration (ms)
+int off_time = 190;     // Button release duration (ms)
+// Tune these to match your treadmill's responsiveness</pre>
+
+<h3>Motor Step Injection Timing</h3>
+<pre>#define SLOW_STEP_TICKS  88     // Motor on/off ticks at recovery pace
+#define FAST_STEP_TICKS  53     // Motor on/off ticks at walking pace
+// Lower = faster motor pulses (higher cadence)</pre>
+
+<h3>DIP Switch Configuration</h3>
+<p>Three bits (A1, A2, A3) allow 8 different configuration profiles (binary 0−7). Currently used for selecting preset profiles; expand as needed for future tuning parameters.</p>
+</div>
+
+<div class="section">
+<h2>Software Architecture: Core State Machines</h2>
+
+<h3>1. Speed Ramping (set_treadmill_speed, jump_up_*, jump_down_*)</h3>
+<p><strong>Purpose:</strong> Moves the treadmill from one speed to another using only the stock +/− buttons.</p>
+<p><strong>Mechanism:</strong> Up to 3 single "jump" presses first, then switches to batched long-presses. The <code>next_odd_ten</code> helper computes checkpoint speeds to prevent overshooting.</p>
+<p><strong>Output:</strong> Streams every intermediate speed out over SoftwareSerial at 115200 baud for telemetry.</p>
+
+<h3>2. Interval Scheduling (treadmillProcessing)</h3>
+<p><strong>Purpose:</strong> Owns the top-level <code>treadmill_state</code> machine and interval countdown.</p>
+<p><strong>Mechanism:</strong> Uses a 10ms tick counter against duration tables to time each phase. Calls <code>set_treadmill_speed</code> at every transition. Drives the TM1637 countdown display and the activity flag.</p>
+<p><strong>Output:</strong> Updates <code>today_total_steps</code>, <code>activity_flag</code>, and display buffer.</p>
+
+<h3>3. Fake Step Injection (fakeStepsProcessing)</h3>
+<p><strong>Purpose:</strong> Pulses the motor to simulate footfalls for a pedometer.</p>
+<p><strong>Mechanism:</strong> A 5-state machine (MOTOR_STOP, MOTOR_ACTIVE, IDLE, PAUSE_STEPS, PAUSED) fires the motor for a fixed on/off tick window per step. Automatically pauses whenever the treadmill enters a HIIT phase or extreme-mode multiplier is active, so injected steps never overlap high-intensity intervals.</p>
+<p><strong>Optimization:</strong> Step counts remain valid across pause/resume cycles.</p>
+
+<h3>4. Extreme Mode Button (extreme_mode_button_processing)</h3>
+<p><strong>Purpose:</strong> Let the user cycle speed tiers or interval-duration presets mid-run.</p>
+<p><strong>Mechanism:</strong> A debounced press/release state machine that either advances <code>extreme_speed_multiplier</code> (and immediately calls <code>set_treadmill_speed</code>) or advances <code>interval_index</code> into the duration tables, depending on the current treadmill state.</p>
+
+<h3>5. Adaptive Rest Extension (aditional_wait_calculator)</h3>
+<p><strong>Purpose:</strong> Give extra recovery time if the user presses the wait button before rest phase ends.</p>
+<p><strong>Mechanism:</strong> Lights the ready LED inside the last ~7 seconds of rest. If the wait button is held in the final ~5 seconds, extends the rest phase by one tick per loop pass, compounding across calls.</p>
+
+<h3>6. Display Formatting (displayTime, print_countdown)</h3>
+<p><strong>Purpose:</strong> Render remaining interval time and current speed tier on the 4-digit TM1637 module.</p>
+<p><strong>Mechanism:</strong> <code>displayTime</code> packs mm:ss into the display's colon format. <code>print_countdown</code> compresses long countdowns (>90s) into a coarser step so the display doesn't update every second, and shows the active speed tier digit alongside the time.</p>
+</div>
+
+<div class="section">
+<h2>Telemetry and Monitoring</h2>
+
+<h3>SoftwareSerial Output</h3>
+<p>Connect A0 (TX) to a serial monitor at <strong>115200 baud</strong> to observe live telemetry:</p>
+<ul style="margin:0; padding:0 0 0 20px; color:var(--dim)">
+<li style="margin-bottom:6px">Every speed ramp: intermediate speed values as they're reached</li>
+<li style="margin-bottom:6px">Treadmill state transitions: STOP, CONSTANT_SPEED, HIIT_REST, HIIT_HIGH</li>
+<li style="margin-bottom:6px">Step counter updates and motor state changes</li>
+<li style="margin-bottom:6px">Button press events and debounce transitions</li>
+</ul>
+
+<h3>Display Output (TM1637)</h3>
+<p>Four 7-segment digits showing:</p>
+<ul style="margin:0; padding:0 0 0 20px; color:var(--dim)">
+<li style="margin-bottom:6px"><strong>During constant speed:</strong> Speed tier (0−4) on the rightmost digit</li>
+<li style="margin-bottom:6px"><strong>During HIIT:</strong> Countdown mm:ss with colon indicator</li>
+<li style="margin-bottom:6px"><strong>When stopped:</strong> Next interval duration preview</li>
+</ul>
+</div>
+
+<div class="section">
+<h2>Deployment and Installation</h2>
+
+<h3>Prerequisites</h3>
+<ul style="margin:0; padding:0 0 0 20px; color:var(--dim)">
+<li style="margin-bottom:6px"><strong>Arduino IDE 2.x</strong> or <strong>PlatformIO</strong></li>
+<li style="margin-bottom:6px">TM1637Display library (Avishay Orpaz) — install via Library Manager</li>
+<li style="margin-bottom:6px">SoftwareSerial — ships with standard AVR core, no extra install needed</li>
+</ul>
+
+<h3>Configuration Steps</h3>
+<ol style="margin:0; padding:0 0 0 20px; color:var(--dim)">
+<li style="margin-bottom:8px"><strong>Review the pin map</strong> against your wiring. Adjust relay GPIO assignments if your board layout differs.</li>
+<li style="margin-bottom:8px"><strong>Tune on_time and off_time:</strong> Start at 120ms/190ms and increase if the treadmill misses button presses, or decrease if it over-responds.</li>
+<li style="margin-bottom:8px"><strong>Adjust speed tables:</strong> Edit <code>CONSTANT_SPEEDS_ARRAY</code> and <code>HIIT_HIGH_SPEEDS_ARRAY</code> to match your target speeds and the treadmill's acceleration curve.</li>
+<li style="margin-bottom:8px"><strong>Set interval durations:</strong> Edit <code>HIIT_high_interval_array</code> and <code>HIIT_rest_interval_array</code> to your preferred workout schedule.</li>
+<li style="margin-bottom:8px"><strong>Configure step injection:</strong> Adjust <code>SLOW_STEP_TICKS</code> and <code>FAST_STEP_TICKS</code> to match your motor's responsiveness and target cadence.</li>
+</ol>
+
+<h3>Flashing and Testing</h3>
+<ol style="margin:0; padding:0 0 0 20px; color:var(--dim)">
+<li style="margin-bottom:8px">Select your Arduino Uno or Nano board and COM port in the IDE.</li>
+<li style="margin-bottom:8px">Upload the sketch.</li>
+<li style="margin-bottom:8px">Open the Serial Monitor (115200 baud) to watch telemetry during testing.</li>
+<li style="margin-bottom:8px">Test each button in isolation (start, stop, extreme mode, wait) before running a full interval session.</li>
+<li style="margin-bottom:8px">Verify that speed ramps smoothly and the display updates correctly.</li>
+<li style="margin-bottom:8px">Monitor step injection by pressing the extreme button and observing motor pulses.</li>
+</ol>
+
+<h3>Safety Checks</h3>
+<ul style="margin:0; padding:0 0 0 20px; color:var(--dim)">
+<li style="margin-bottom:6px">Confirm the treadmill's emergency stop is always wired and accessible, independent of the controller.</li>
+<li style="margin-bottom:6px">Test the stop button thoroughly — it should cut the belt immediately via the <code>TREADMILL_STOP</code> relay.</li>
+<li style="margin-bottom:6px">Verify the relay outputs are wired correctly to avoid any possibility of simultaneous button presses (which could jam the treadmill).</li>
+<li style="margin-bottom:6px">Start with slow speed tiers and gradual intervals during your first session, then increase intensity once you're confident in the system's response.</li>
+</ul>
+</div>
+
+<div class="section">
+<h2>Repository Structure</h2>
+<pre>startrac_walk_intervals.ino       Current/latest firmware
+old firmware/                     Dated snapshots of every previous revision
+  03-04-2026/ 05-06-26/ 23-06-26/ 26-6-2026/ 30-06-2026/ ...
+docs/
+  button-debug-pinout.txt         Pin-connection notes from bench-testing
+esp_now/
+  Basic_Master/                   ESP8266 master: reads cooling-fan trigger pin
+  slave_fan/                      ESP8266 slave: drives the physical fan
+watch_linear_motor/
+  watch_linear_motor/             Standalone bench sketch for motor timing tuning</pre>
+
+<p>The <code>old firmware/</code> directory holds full working copies of every revision snapshot, useful for diffing behavior or tuning speed tables across versions. The root <code>.ino</code> is always the current version.</p>
+</div>
+
+<div class="section">
+<h2>Wireless Fan Control (ESP-NOW)</h2>
+<p>The project includes optional ESP8266-based wireless fan control via ESP-NOW:</p>
+<ul style="margin:0; padding:0 0 0 20px; color:var(--dim)">
+<li style="margin-bottom:6px"><strong>Master:</strong> Monitors the cooling-fan trigger pin and sends the state over ESP-NOW (no WiFi router needed).</li>
+<li style="margin-bottom:6px"><strong>Slave:</strong> Receives the signal and drives a physical fan relay.</li>
+</ul>
+<p>This allows the treadmill controller to trigger cooling without wired connections, useful if the fan is mounted remotely or you need isolation between the treadmill circuits.</p>
+</div>
+
+<div class="section">
+<h2>GitHub Repository</h2>
+<p><a href="https://github.com/amd858/startrac_walk_intervals">amd858/startrac_walk_intervals on GitHub</a></p>
+</div>
+
+<script>
+(function(){
+  var root=document.documentElement, btn=document.getElementById('themeBtn'), label=btn.querySelector('.label'), saved=null;
+  try{ saved=localStorage.getItem('theme'); }catch(e){}
+  var start = saved || 'dark';
+  apply(start, false);
+
+  function apply(mode, animate){
+    root.setAttribute('data-theme', mode);
+    btn.setAttribute('aria-pressed', mode==='light' ? 'true' : 'false');
+    label.textContent = mode==='dark' ? 'Day' : 'Night';
+    try{ localStorage.setItem('theme', mode); }catch(e){}
+  }
+  var busy = false;
+  btn.addEventListener('click', function(){
+    if(busy) return;
+    busy = true;
+    apply(root.getAttribute('data-theme')==='dark' ? 'light' : 'dark', true);
+    setTimeout(function(){ busy = false; }, 2200);
+  });
+})();
+</script>
+</body>
+</html>
