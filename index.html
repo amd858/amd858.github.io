@@ -33,6 +33,40 @@ html[data-theme="light"]{
   --art-mech:.20; --art-trace:.18; --art-pad:.24; --art-leaf:.20;
   --weight:600;
 }
+/* ---- color profiles: alternate hue moods, same structure ---- */
+html[data-theme="dark"][data-profile="blueprint"]{
+  --paper:#12181F;   --ink:#DCE6EC;   --dim:#8CA0AC;
+  --line:rgba(220,230,236,.16);
+  --green:#4FB3A6;   --steel:#6FA3D8; --copper:#D9954F;
+  --brass:#C9B15A;   --slate:#7C8B96;
+}
+html[data-theme="light"][data-profile="blueprint"]{
+  --paper:#E8EEF3;   --ink:#131A21;   --dim:#47565F;
+  --line:rgba(19,26,33,.16);
+  --green:#0F6E62;   --steel:#245C91; --copper:#93551C;
+  --brass:#7C6317;   --slate:#3E4A52;
+}
+html[data-theme="dark"][data-profile="ember"]{
+  --paper:#201613;   --ink:#F1E2D3;   --dim:#B69885;
+  --line:rgba(241,226,211,.16);
+  --green:#7CA85E;   --steel:#A68B76; --copper:#E2854A;
+  --brass:#D6A83E;   --slate:#AE8871;
+}
+html[data-theme="light"][data-profile="ember"]{
+  --paper:#F3E6D8;   --ink:#211510;   --dim:#6B5546;
+  --line:rgba(33,21,16,.16);
+  --green:#3D6B2C;   --steel:#6B5645; --copper:#9C4A1A;
+  --brass:#8A6112;   --slate:#6B5142;
+}
+.profiles{position:fixed; top:64px; right:20px; z-index:5; display:flex; gap:7px}
+.profiles button{width:18px; height:18px; border-radius:50%; padding:0; cursor:pointer;
+  border:2px solid var(--line); background:conic-gradient(var(--sw-a) 0deg 120deg, var(--sw-b) 120deg 240deg, var(--sw-c) 240deg 360deg);
+  transition:border-color .3s, transform .15s}
+.profiles button:hover{transform:scale(1.18)}
+.profiles button[aria-pressed="true"]{border-color:var(--ink)}
+.profiles button:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+@media(max-width:520px){.profiles{top:52px; right:12px; gap:6px}
+  .profiles button{width:16px; height:16px}}
 *{box-sizing:border-box}
 body{
   margin:0 auto; max-width:640px; padding:64px 24px 80px;
@@ -252,6 +286,14 @@ body>h1,body>.role,body>.band,body>.intro,body>section,body>footer{position:rela
     <path d="M20.5 14.6A8.6 8.6 0 0 1 9.4 3.5a8.6 8.6 0 1 0 11.1 11.1z"/></svg>
   <span class="label">Night</span>
 </button>
+<div class="profiles" id="profilePicker" role="group" aria-label="Color profile">
+  <button type="button" data-profile="field" aria-pressed="true" aria-label="Field color profile" title="Field"
+    style="--sw-a:#57B48C;--sw-b:#86AAC4;--sw-c:#D28B5A"></button>
+  <button type="button" data-profile="blueprint" aria-pressed="false" aria-label="Blueprint color profile" title="Blueprint"
+    style="--sw-a:#4FB3A6;--sw-b:#6FA3D8;--sw-c:#D9954F"></button>
+  <button type="button" data-profile="ember" aria-pressed="false" aria-label="Ember color profile" title="Ember"
+    style="--sw-a:#7CA85E;--sw-b:#A68B76;--sw-c:#E2854A"></button>
+</div>
 <div class="sweep" id="sweep" aria-hidden="true"></div>
 
 <div class="deco deco-l"><svg class="deco-svg" viewBox="0 0 160 900" preserveAspectRatio="xMinYMid slice" aria-hidden="true">
@@ -519,6 +561,27 @@ and VoIP router setup (PTCL / MicroSIP).</p>
     busy=true; btn.classList.add('busy');
     apply(root.getAttribute('data-theme')==='dark' ? 'light' : 'dark', true);
     setTimeout(function(){ busy=false; btn.classList.remove('busy'); }, 2200);
+  });
+})();
+(function(){
+  var root=document.documentElement, picker=document.getElementById('profilePicker');
+  if(!picker) return;
+  var buttons=[].slice.call(picker.querySelectorAll('button')), saved=null;
+  try{ saved=localStorage.getItem('profile'); }catch(e){}
+  apply(saved||'field');
+
+  function apply(name){
+    root.setAttribute('data-profile', name);
+    buttons.forEach(function(b){ b.setAttribute('aria-pressed', b.dataset.profile===name ? 'true':'false'); });
+    try{ localStorage.setItem('profile', name); }catch(e){}
+  }
+  buttons.forEach(function(b){
+    b.addEventListener('click', function(){ apply(b.dataset.profile); });
+  });
+  window.addEventListener('storage', function(e){
+    if(e.key==='profile' && e.newValue && e.newValue!==root.getAttribute('data-profile')){
+      apply(e.newValue);
+    }
   });
 })();
 </script>

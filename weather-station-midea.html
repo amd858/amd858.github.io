@@ -32,6 +32,34 @@ html[data-theme="light"]{
   --surface:#F5F3EA; --surface-2:#EFEDE1;
   --ok:#227a52; --warn:#a3690a;
 }
+html[data-theme="dark"][data-profile="blueprint"]{
+  --paper:#12181F; --ink:#DCE6EC; --dim:#8CA0AC; --line:rgba(220,230,236,.16);
+  --green:#4FB3A6; --steel:#6FA3D8; --copper:#D9954F; --brass:#C9B15A; --slate:#7C8B96;
+  --surface:#171F27; --surface-2:#1C2530;
+}
+html[data-theme="light"][data-profile="blueprint"]{
+  --paper:#E8EEF3; --ink:#131A21; --dim:#47565F; --line:rgba(19,26,33,.16);
+  --green:#0F6E62; --steel:#245C91; --copper:#93551C; --brass:#7C6317; --slate:#3E4A52;
+  --surface:#F3F7FA; --surface-2:#EBF0F4;
+}
+html[data-theme="dark"][data-profile="ember"]{
+  --paper:#201613; --ink:#F1E2D3; --dim:#B69885; --line:rgba(241,226,211,.16);
+  --green:#7CA85E; --steel:#A68B76; --copper:#E2854A; --brass:#D6A83E; --slate:#AE8871;
+  --surface:#271C18; --surface-2:#2E221D;
+}
+html[data-theme="light"][data-profile="ember"]{
+  --paper:#F3E6D8; --ink:#211510; --dim:#6B5546; --line:rgba(33,21,16,.16);
+  --green:#3D6B2C; --steel:#6B5645; --copper:#9C4A1A; --brass:#8A6112; --slate:#6B5142;
+  --surface:#F8EFE3; --surface-2:#F1E5D6;
+}
+.profiles{position:fixed;top:54px;right:16px;z-index:5;display:flex;gap:7px}
+.profiles button{width:16px;height:16px;border-radius:50%;padding:0;cursor:pointer;
+  border:2px solid var(--line);background:conic-gradient(var(--sw-a) 0deg 120deg,var(--sw-b) 120deg 240deg,var(--sw-c) 240deg 360deg);
+  transition:border-color .3s,transform .15s}
+.profiles button:hover{transform:scale(1.18)}
+.profiles button[aria-pressed="true"]{border-color:var(--ink)}
+.profiles button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media(max-width:640px){.profiles{top:44px;right:10px;gap:6px}}
 *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 a{color:var(--accent);text-decoration-color:color-mix(in srgb,var(--accent) 45%,transparent)}
@@ -88,6 +116,14 @@ body{transition:background-color .4s ease}h1,h2,h3,h4,p,a,code,pre,table,table t
   <svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.6A8.6 8.6 0 0 1 9.4 3.5a8.6 8.6 0 1 0 11.1 11.1z"/></svg>
   <span class="label">Dark</span>
 </button>
+<div class="profiles" id="profilePicker" role="group" aria-label="Color profile">
+  <button type="button" data-profile="field" aria-pressed="true" aria-label="Field color profile" title="Field"
+    style="--sw-a:#57B48C;--sw-b:#86AAC4;--sw-c:#D28B5A"></button>
+  <button type="button" data-profile="blueprint" aria-pressed="false" aria-label="Blueprint color profile" title="Blueprint"
+    style="--sw-a:#4FB3A6;--sw-b:#6FA3D8;--sw-c:#D9954F"></button>
+  <button type="button" data-profile="ember" aria-pressed="false" aria-label="Ember color profile" title="Ember"
+    style="--sw-a:#7CA85E;--sw-b:#A68B76;--sw-c:#E2854A"></button>
+</div>
 
 <div class="shell">
 <nav class="toc" aria-label="Table of contents">
@@ -450,6 +486,26 @@ max_temp = <span class="c">20.2</span> + dip_offset;</pre>
     busy=true;
     apply(root.getAttribute('data-theme')==='dark'?'light':'dark',true);
     setTimeout(function(){busy=false},2200);
+  });
+})();
+(function(){
+  var root=document.documentElement, picker=document.getElementById('profilePicker');
+  if(!picker) return;
+  var buttons=[].slice.call(picker.querySelectorAll('button')), saved=null;
+  try{saved=localStorage.getItem('profile')}catch(e){}
+  apply(saved||'field');
+  function apply(name){
+    root.setAttribute('data-profile',name);
+    buttons.forEach(function(b){b.setAttribute('aria-pressed',b.dataset.profile===name?'true':'false')});
+    try{localStorage.setItem('profile',name)}catch(e){}
+  }
+  buttons.forEach(function(b){
+    b.addEventListener('click',function(){apply(b.dataset.profile)});
+  });
+  window.addEventListener('storage',function(e){
+    if(e.key==='profile' && e.newValue && e.newValue!==root.getAttribute('data-profile')){
+      apply(e.newValue);
+    }
   });
 })();
 </script>
