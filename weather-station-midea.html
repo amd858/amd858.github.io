@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="dark" data-profile="doc">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -51,6 +51,16 @@ html[data-theme="light"][data-profile="ember"]{
   --paper:#F3E6D8; --ink:#211510; --dim:#6B5546; --line:rgba(33,21,16,.16);
   --green:#3D6B2C; --steel:#6B5645; --copper:#9C4A1A; --brass:#8A6112; --slate:#6B5142;
   --surface:#F8EFE3; --surface-2:#F1E5D6;
+}
+html[data-theme="dark"][data-profile="doc"]{
+  --paper:#12161C; --ink:#E8ECF1; --dim:#8B96A5; --line:#2A323E;
+  --green:#FF8552; --steel:#FF8552; --copper:#FF8552; --brass:#FF8552; --slate:#FF8552;
+  --surface:#1A2029; --surface-2:#212933;
+}
+html[data-theme="light"][data-profile="doc"]{
+  --paper:#EEF1F4; --ink:#1A2029; --dim:#5B6775; --line:#D7DCE2;
+  --green:#CC4A15; --steel:#CC4A15; --copper:#CC4A15; --brass:#CC4A15; --slate:#CC4A15;
+  --surface:#FFFFFF; --surface-2:#F5F7F9;
 }
 .profiles{position:fixed;top:54px;right:16px;z-index:5;display:flex;gap:7px}
 .profiles button{width:16px;height:16px;border-radius:50%;padding:0;cursor:pointer;
@@ -117,7 +127,9 @@ body{transition:background-color .4s ease}h1,h2,h3,h4,p,a,code,pre,table,table t
   <span class="label">Dark</span>
 </button>
 <div class="profiles" id="profilePicker" role="group" aria-label="Color profile">
-  <button type="button" data-profile="field" aria-pressed="true" aria-label="Field color profile" title="Field"
+  <button type="button" data-profile="doc" aria-pressed="true" aria-label="Doc color profile" title="Doc"
+    style="--sw-a:#FF8552;--sw-b:#FF8552;--sw-c:#12161C"></button>
+  <button type="button" data-profile="field" aria-pressed="false" aria-label="Field color profile" title="Field"
     style="--sw-a:#57B48C;--sw-b:#86AAC4;--sw-c:#D28B5A"></button>
   <button type="button" data-profile="blueprint" aria-pressed="false" aria-label="Blueprint color profile" title="Blueprint"
     style="--sw-a:#4FB3A6;--sw-b:#6FA3D8;--sw-c:#D9954F"></button>
@@ -493,7 +505,7 @@ max_temp = <span class="c">20.2</span> + dip_offset;</pre>
   if(!picker) return;
   var buttons=[].slice.call(picker.querySelectorAll('button')), saved=null;
   try{saved=localStorage.getItem('profile')}catch(e){}
-  apply(saved||'field');
+  apply(saved||'doc');
   function apply(name){
     root.setAttribute('data-profile',name);
     buttons.forEach(function(b){b.setAttribute('aria-pressed',b.dataset.profile===name?'true':'false')});
