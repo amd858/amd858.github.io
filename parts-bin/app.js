@@ -339,7 +339,141 @@ function fmt(amount, cur) {
 }
 
 function pricesFor(cid) {
-  return DB.prices.filter(p => p.cid === cid);
+  const live = LIVE[cid] || [];
+  // A live reading is today's truth; a saved row for the same shop is older,
+  // so the live one replaces it in the list rather than hiding behind it.
+  const saved = DB.prices.filter(p => p.cid === cid && !live.some(l => l.store === p.store));
+  return saved.concat(live);
+}
+
+/* ==================== live prices, fetched in the browser ====================
+   Shopify shops expose a public predictive-search endpoint that answers
+   cross-origin requests, so the page can read today's price directly — no
+   server, no scheduled job, nothing to run. Shops that block it, or are not
+   on Shopify, simply contribute nothing and the app behaves as before.        */
+
+const SHOPIFY_LIVE = {
+  digilog: 'digilog.pk',
+  chippk: 'chip.pk',
+  hallroadlahore: 'hallroadlahore.pk',
+  electronicsoln: 'electronicsolution.pk',
+  modernelec: 'modernelectronics.pk',
+  smarteshop: 'smarteshop.pk'
+};
+
+let LIVE = {};                       // cid -> [price rows fetched this session]
+const liveState = {};                // cid -> 'loading' | 'done'
+const LIVE_TTL = 10 * 60 * 1000;     // re-fetch a part at most every 10 minutes
+const liveStamp = {};
+
+/* --- product matching (mirrors scripts/scrape.py, kept deliberately in step) --- */
+const ACCESSORY_WORDS = new Set(['cable','case','holder','shield','kit','bracket','mount',
+  'cover','adapter','stand','enclosure','box','sticker','book','screw','spacer','sleeve','bag']);
+const GENERIC_WORDS = new Set(['price','in','pakistan','buy','online','for','with','the','best',
+  'new','original','pcs','pack','of','and','module','board','sensor','development','arduino',
+  'compatible','quality','high','low','free','delivery','shop','store','inch','type']);
+const REVISION_WORDS = new Set(['r1','r2','r3','v1','v2','v3','rev']);
+const MATCH_THRESHOLD = 0.55;
+
+const VARIANTS = [
+  [/\bwith\s+(usb\s+)?cable\b|\bincluding\s+cable\b|\bcable\s+included\b/, 'with cable', ['cable']],
+  [/\bwith\s+(uln2003|driver)\b/, 'with driver', []],
+  [/\bpre[\s-]?soldered\b|\bheaders?\s+soldered\b|\bsoldered\b/, 'soldered', []],
+  [/\bunsoldered\b|\bwithout\s+header/, 'unsoldered', []],
+  [/\bpack\s+of\s+\d+\b|\b\d+\s*pcs\b|\b\d+\s*pieces\b/, 'multi-pack', []],
+  [/\bsmd\b/, 'SMD', []], [/\bdip\b/, 'DIP', []], [/\bclone\b/, 'clone', []]
+];
+
+const wtoks = s => String(s || '').toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+const hasDigit = t => /\d/.test(t);
+const tokWeight = t => REVISION_WORDS.has(t) ? 0.2 : (hasDigit(t) ? 2 : 1);
+
+function variantHits(title) {
+  const low = String(title || '').toLowerCase();
+  return VARIANTS.filter(v => v[0].test(low));
+}
+function detectVariant(title) {
+  const labels = variantHits(title).map(v => v[1]);
+  return Array.from(new Set(labels)).join(', ');
+}
+function excusedWords(title) {
+  const out = new Set();
+  variantHits(title).forEach(v => v[2].forEach(w => out.add(w)));
+  return out;
+}
+
+function rawScore(part, title) {
+  const p = wtoks(part);
+  if (!p.length) return 0;
+  const tset = new Set(wtoks(title));
+  const pset = new Set(p);
+  const excused = excusedWords(title);
+  for (const w of tset) {
+    if (ACCESSORY_WORDS.has(w) && !pset.has(w) && !excused.has(w)) return 0;
+  }
+  let total = 0, hit = 0;
+  p.forEach(t => { const w = tokWeight(t); total += w; if (tset.has(t)) hit += w; });
+  let s = total ? hit / total : 0;
+  let extra = 0;
+  tset.forEach(t => {
+    if (!pset.has(t) && !GENERIC_WORDS.has(t) && !REVISION_WORDS.has(t) && hasDigit(t)) extra++;
+  });
+  return Math.max(0, s - 0.15 * extra);
+}
+
+/* Accept a title only if no OTHER catalogue part explains it better — this is
+   what stops "Arduino Mega 2560 R3" being filed under "Arduino UNO R3". */
+function matchesPart(part, title) {
+  const s = rawScore(part, title);
+  if (s < MATCH_THRESHOLD) return false;
+  let bestPart = part, bestScore = s;
+  for (const c of DB.components) {
+    if (c.part === part) continue;
+    const o = rawScore(c.part, title);
+    if (o > bestScore || (Math.abs(o - bestScore) < 1e-9 && wtoks(c.part).length > wtoks(bestPart).length)) {
+      bestPart = c.part; bestScore = o;
+    }
+  }
+  return bestPart === part;
+}
+
+async function fetchLiveFor(comp) {
+  if (liveState[comp.id] === 'loading') return;
+  if (liveStamp[comp.id] && Date.now() - liveStamp[comp.id] < LIVE_TTL) return;
+  liveState[comp.id] = 'loading';
+  render();
+
+  const jobs = Object.entries(SHOPIFY_LIVE).map(async ([storeId, domain]) => {
+    const st = DB.stores.find(s => s.id === storeId);
+    if (!st || !st.enabled) return null;
+    try {
+      const u = `https://${domain}/search/suggest.json?q=${encodeURIComponent(comp.part)}` +
+                `&resources[type]=product&resources[limit]=5`;
+      const r = await fetch(u, { mode: 'cors' });
+      if (!r.ok) return null;
+      const d = await r.json();
+      const products = ((d.resources || {}).results || {}).products || [];
+      const hit = products.find(p => matchesPart(comp.part, p.title || ''));
+      if (!hit) return null;
+      const price = parseFloat(String(hit.price || '').replace(/[^\d.]/g, ''));
+      if (!isFinite(price)) return null;
+      let url = hit.url || '';
+      if (url && !/^https?:/.test(url)) url = `https://${domain}${url}`;
+      return {
+        id: 'live-' + storeId + '-' + comp.id, cid: comp.id, store: storeId,
+        price, cur: st.currency || 'PKR',
+        stock: hit.available === false ? 'out' : 'in',
+        url, date: today(), variant: detectVariant(hit.title || ''),
+        live: true, demo: false, title: hit.title || ''
+      };
+    } catch (e) { return null; }   // blocked, offline, or not Shopify — skip quietly
+  });
+
+  const rows = (await Promise.all(jobs)).filter(Boolean);
+  LIVE[comp.id] = rows;
+  liveStamp[comp.id] = Date.now();
+  liveState[comp.id] = 'done';
+  render();
 }
 
 function daysAgo(d) {
@@ -471,17 +605,20 @@ function render() {
         : esc(storeName(p.store));
       return `<div class="prow ${isBest ? 'is-best' : ''}">
         <span class="dot ${p.stock === 'in' ? 'in' : p.stock === 'out' ? 'out' : 'unk'}" title="${p.stock === 'in' ? 'In stock' : p.stock === 'out' ? 'Out of stock' : 'Stock unknown'}"></span>
-        <span class="store">${label}${p.demo ? ' <span class="pill">sample</span>' : ''}${p.variant ? ` <span class="pill" title="This listing is a different bundle or quantity, so its price is not directly comparable">${esc(p.variant)}</span>` : ''}</span>
-        <span class="when">${esc(daysAgo(p.date))}</span>
+        <span class="store">${label}${p.demo ? ' <span class="pill">sample</span>' : ''}${p.live ? ' <span class="pill live" title="Read from the shop just now">live</span>' : ''}${p.variant ? ` <span class="pill" title="This listing is a different bundle or quantity, so its price is not directly comparable">${esc(p.variant)}</span>` : ''}${p.title ? `<span class="matched" title="What this shop actually calls it — check it really is the part you want">${esc(p.title)}</span>` : ''}</span>
+        <span class="when">${esc(p.live ? 'now' : daysAgo(p.date))}</span>
         <span class="amt">${esc(fmt(p.price, p.cur))}</span>
         <span class="conv">${p.cur === disp ? '' : '≈ ' + esc(fmt(d, disp))}</span>
-        <span class="rowacts">
-          <button class="iconbtn" onclick="openPrice('${c.id}','${p.id}')" title="Edit price">edit</button>
-          <button class="iconbtn" onclick="delPrice('${p.id}')" title="Delete price">del</button>
+        <span class="rowacts">${p.live
+          ? `<button class="iconbtn" onclick="keepLive('${c.id}','${p.store}')" title="Save this price to your list">keep</button>`
+          : `<button class="iconbtn" onclick="openPrice('${c.id}','${p.id}')" title="Edit price">edit</button>
+             <button class="iconbtn" onclick="delPrice('${p.id}')" title="Delete price">del</button>`}
         </span>
       </div>`;
-    }).join('') : `<div class="noprice">No price saved &middot;
-        <button class="linkbtn" onclick="openPrice('${c.id}',null)">record one</button></div>`;
+    }).join('') : (liveState[c.id] === 'loading'
+        ? `<div class="noprice">Checking shops…</div>`
+        : `<div class="noprice">No price found &middot;
+        <button class="linkbtn" onclick="openPrice('${c.id}',null)">record one</button></div>`);
 
     return `<article class="strip">
       <div class="strip-head">
@@ -497,13 +634,34 @@ function render() {
         </div>
         <div class="best">
           ${best
-            ? `<div class="amt">${esc(fmt(best.disp, disp))}</div><div class="lbl">cheapest saved</div>`
-            : `<div class="none">no price saved</div>`}
+            ? `<div class="amt">${esc(fmt(best.disp, disp))}</div><div class="lbl">cheapest${
+                 (LIVE[c.id] || []).some(l => best.p.id === l.id) ? ' · live' : ''}</div>`
+            : liveState[c.id] === 'loading'
+              ? `<div class="none">checking…</div>`
+              : `<div class="none">no price yet</div>`}
         </div>
       </div>
       <div class="prices">${priceHtml}</div>
     </article>`;
   }).join('') + (list.length > 120 ? `<p class="stat">Showing first 120. Narrow the search to see the rest.</p>` : '');
+
+  // Ask the Shopify shops for today's price — only for a deliberate search, and
+  // only the top few hits. These are small businesses; idling on their servers
+  // because a page happens to be open is not on. Guarded by a per-part
+  // timestamp, so the re-render this triggers doesn't loop.
+  if (q) list.slice(0, 3).forEach(x => fetchLiveFor(x.c));
+}
+
+/* Promote a live reading into the user's own saved list. */
+function keepLive(cid, storeId) {
+  const row = (LIVE[cid] || []).find(l => l.store === storeId);
+  if (!row) return;
+  const ex = DB.prices.find(p => p.cid === cid && p.store === storeId);
+  const rec = { cid, store: storeId, price: row.price, cur: row.cur, stock: row.stock,
+                date: today(), url: row.url, variant: row.variant, demo: false };
+  if (ex) Object.assign(ex, rec); else DB.prices.push(Object.assign({ id: uid() }, rec));
+  save(); render();
+  toast('Price saved to your list.');
 }
 
 function refreshFilters() {
