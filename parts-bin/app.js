@@ -471,7 +471,7 @@ function render() {
         : esc(storeName(p.store));
       return `<div class="prow ${isBest ? 'is-best' : ''}">
         <span class="dot ${p.stock === 'in' ? 'in' : p.stock === 'out' ? 'out' : 'unk'}" title="${p.stock === 'in' ? 'In stock' : p.stock === 'out' ? 'Out of stock' : 'Stock unknown'}"></span>
-        <span class="store">${label}${p.demo ? ' <span class="pill">sample</span>' : ''}</span>
+        <span class="store">${label}${p.demo ? ' <span class="pill">sample</span>' : ''}${p.variant ? ` <span class="pill" title="This listing is a different bundle or quantity, so its price is not directly comparable">${esc(p.variant)}</span>` : ''}</span>
         <span class="when">${esc(daysAgo(p.date))}</span>
         <span class="amt">${esc(fmt(p.price, p.cur))}</span>
         <span class="conv">${p.cur === disp ? '' : '≈ ' + esc(fmt(d, disp))}</span>
@@ -988,7 +988,8 @@ async function loadRepoPrices() {
       if (!st) return;
       const ex = DB.prices.find(p => p.cid === c.id && p.store === st.id);
       const rec = { cid: c.id, store: st.id, price: Number(row.price), cur: row.currency || st.currency,
-                    stock: row.stock || 'unk', url: row.url || '', date: (row.date || today()).slice(0, 10), demo: false };
+                    stock: row.stock || 'unk', url: row.url || '', date: (row.date || today()).slice(0, 10),
+                    variant: row.variant || '', demo: false };
       if (!isFinite(rec.price)) return;
       if (ex) Object.assign(ex, rec); else DB.prices.push(Object.assign({ id: uid() }, rec));
       n++;

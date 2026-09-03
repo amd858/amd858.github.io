@@ -38,11 +38,14 @@ import re
 import sys
 import time
 
+# Only the network side needs these. The matcher is pure Python, so --selftest
+# still runs on a bare interpreter.
 try:
     import requests
     from bs4 import BeautifulSoup
+    HAVE_DEPS = True
 except ImportError:
-    sys.exit("Install dependencies first:  pip install requests beautifulsoup4")
+    HAVE_DEPS = False
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 DELAY = 2.0          # seconds between requests — be polite
@@ -111,21 +114,151 @@ def to_number(text):
         return None
 
 
-def best_match(cards, part, rule):
-    """Prefer a card whose title actually contains the part number."""
-    key = re.sub(r"[^a-z0-9]", "", part.lower())
-    fallback = None
-    for card in cards:
-        t = card.select_one(rule["title"])
-        title = t.get_text(" ", strip=True) if t else ""
-        if fallback is None:
-            fallback = (card, title)
-        if key and key in re.sub(r"[^a-z0-9]", "", title.lower()):
-            return card, title
-    return fallback if fallback else (None, "")
+# ---------------------------------------------------------------------------
+# Product matching.
+#
+# The hard part of this whole script. The same board is named differently at
+# every shop: Digilog lists "arduino-uno", Hall Road lists
+# "arduino-uno-smd-price-in-pakistan". Matching on the exact catalogue string
+# misses that, and matching loosely picks up cables and cases instead.
+#
+# So: score the store's title against the part name by weighted token overlap,
+# veto accessories outright, and then — the important bit — only accept the
+# title if no OTHER part in the catalogue explains it better. That last rule is
+# what stops "Arduino Mega 2560 R3" being filed under "Arduino UNO R3", and
+# "RGB LED 5mm" under "LED 5mm".
+#
+# Run `python scripts/scrape.py --selftest` to exercise this with no network.
+# ---------------------------------------------------------------------------
+
+# Not the part at all — a thing that goes *around* the part. Reject outright.
+# "cable" lives here because "Arduino Uno Cable USB" is a cable, not a board.
+ACCESSORY_WORDS = {
+    "cable", "case", "holder", "shield", "kit", "bracket", "mount", "cover",
+    "adapter", "stand", "enclosure", "box", "sticker", "book", "screw",
+    "spacer", "sleeve", "bag",
+}
+
+# Same part, different bundle or quantity — and a different price because of it.
+# These are NOT rejected: an Arduino Nano sold *with* a USB cable is still a
+# Nano, it just costs more. They are accepted and tagged, so a 910 sitting next
+# to a 660 reads as "with cable" instead of as an unexplained gap.
+#
+# Third field = accessory words this phrasing excuses. That is what separates
+# "Nano with cable" (a bundled board) from "Uno Cable USB" (just a cable).
+VARIANT_PATTERNS = [
+    (re.compile(r"\bwith\s+(usb\s+)?cable\b|\bincluding\s+cable\b|\bcable\s+included\b"),
+     "with cable", frozenset({"cable"})),
+    (re.compile(r"\bwith\s+(uln2003|driver)\b"), "with driver", frozenset()),
+    (re.compile(r"\bpre[\s-]?soldered\b|\bheaders?\s+soldered\b|\bsoldered\b"),
+     "soldered", frozenset()),
+    (re.compile(r"\bunsoldered\b|\bwithout\s+header"), "unsoldered", frozenset()),
+    (re.compile(r"\bpack\s+of\s+(\d+)\b|\b(\d+)\s*pcs\b|\b(\d+)\s*pieces\b"),
+     "multi-pack", frozenset()),
+    (re.compile(r"\bsmd\b"), "SMD", frozenset()),
+    (re.compile(r"\bdip\b"), "DIP", frozenset()),
+    (re.compile(r"\bclone\b"), "clone", frozenset()),
+]
 
 
-def scrape_store(session, store_name, rule, parts):
+def _variant_hits(title):
+    low = title.lower()
+    return [(label, excuses) for rx, label, excuses in VARIANT_PATTERNS if rx.search(low)]
+
+
+def detect_variant(title):
+    """Return a short label if the title advertises a priced-differently variant."""
+    labels = [label for label, _ in _variant_hits(title)]
+    return ", ".join(dict.fromkeys(labels)) if labels else ""
+
+
+def _excused(title):
+    """Accessory words that this title's phrasing legitimately explains."""
+    out = set()
+    for _, excuses in _variant_hits(title):
+        out |= excuses
+    return out
+
+
+# words shops sprinkle on every listing; they carry no identity
+GENERIC = {
+    "price", "in", "pakistan", "buy", "online", "for", "with", "the", "best",
+    "new", "original", "pcs", "pack", "of", "and", "module", "board", "sensor",
+    "development", "arduino", "compatible", "quality", "high", "low", "free",
+    "delivery", "shop", "store", "inch", "type",
+}
+# revision markers: shops drop these freely, so their absence proves nothing
+REVISION = {"r1", "r2", "r3", "v1", "v2", "v3", "rev"}
+
+MATCH_THRESHOLD = 0.55
+
+
+def toks(s):
+    return [t for t in re.split(r"[^a-z0-9]+", s.lower()) if t]
+
+
+def _weight(tok):
+    if tok in REVISION:
+        return 0.2
+    return 2.0 if any(ch.isdigit() for ch in tok) else 1.0
+
+
+def raw_score(part, title):
+    """0..1 — how well a store's product title matches one catalogue part."""
+    p = toks(part)
+    if not p:
+        return 0.0
+    tset = set(toks(title))
+    # An accessory word the part name never mentions means it's a different
+    # item — unless the phrasing excuses it ("Nano *with* cable" is still a Nano).
+    if (ACCESSORY_WORDS & tset) - set(p) - _excused(title):
+        return 0.0
+    total = sum(_weight(x) for x in p)
+    hit = sum(_weight(x) for x in p if x in tset)
+    s = (hit / total) if total else 0.0
+    # extra model-ish tokens suggest a different variant (2560, N16R8, 1.3)
+    extra = [x for x in tset - set(p) - GENERIC - REVISION if any(c.isdigit() for c in x)]
+    return max(0.0, s - 0.15 * len(extra))
+
+
+def match(part, title, catalogue):
+    """(accepted, score, reason) — accepted only if `part` is the catalogue's
+    own best explanation of this title."""
+    s = raw_score(part, title)
+    if s < MATCH_THRESHOLD:
+        return False, s, "below threshold"
+    best_p, best_s = part, s
+    for other in catalogue:
+        if other == part:
+            continue
+        o = raw_score(other, title)
+        if o > best_s or (abs(o - best_s) < 1e-9 and len(toks(other)) > len(toks(best_p))):
+            best_p, best_s = other, o
+    if best_p != part:
+        return False, s, f"'{best_p}' fits better"
+    return True, s, ""
+
+
+def pick_best(part, candidates, catalogue):
+    """candidates: [(title, payload)] -> (payload, title, score) or (None, '', best_score).
+
+    Never guesses. If nothing clears the bar, returns None so the caller skips
+    the part rather than recording a price for the wrong product.
+    """
+    ranked = []
+    for title, payload in candidates:
+        ok, s, why = match(part, title, catalogue)
+        ranked.append((ok, s, -len(toks(title)), title, payload, why))
+    ranked.sort(key=lambda r: (r[0], r[1], r[2]), reverse=True)
+    if not ranked:
+        return None, "", 0.0, "no results"
+    ok, s, _, title, payload, why = ranked[0]
+    if not ok:
+        return None, title, s, why
+    return payload, title, s, ""
+
+
+def scrape_store(session, store_name, rule, parts, catalogue):
     rows = []
     for part in parts:
         url = rule["search"].format(q=requests.utils.quote(part))
@@ -144,11 +277,21 @@ def scrape_store(session, store_name, rule, parts):
             time.sleep(DELAY)
             continue
 
-        card, title = best_match(cards, part, rule)
-        pnode = card.select_one(rule["price"]) if card else None
+        candidates = []
+        for c in cards:
+            t = c.select_one(rule["title"])
+            candidates.append((t.get_text(" ", strip=True) if t else "", c))
+
+        card, title, sc, why = pick_best(part, candidates, catalogue)
+        if card is None:
+            print(f"  - {store_name} / {part}: no confident match ({why}; best {sc:.2f})")
+            time.sleep(DELAY)
+            continue
+
+        pnode = card.select_one(rule["price"])
         price = to_number(pnode.get_text(" ", strip=True) if pnode else "")
         if price is None:
-            print(f"  - {store_name} / {part}: found a card but no price (check the 'price' selector)")
+            print(f"  - {store_name} / {part}: matched '{title}' but no price (check the 'price' selector)")
             time.sleep(DELAY)
             continue
 
@@ -157,6 +300,7 @@ def scrape_store(session, store_name, rule, parts):
         if lnode and lnode.get("href"):
             link = lnode["href"]
 
+        variant = detect_variant(title)
         rows.append({
             "part": part,
             "store": store_name,
@@ -165,14 +309,16 @@ def scrape_store(session, store_name, rule, parts):
             "stock": "unk",
             "url": link,
             "date": time.strftime("%Y-%m-%d"),
+            "variant": variant,
             "matched_title": title,
         })
-        print(f"  + {store_name} / {part}: {rule['currency']} {price}")
+        print(f"  + {store_name} / {part}: {rule['currency']} {price}"
+              f"{' [' + variant + ']' if variant else ''}  ({sc:.2f}) {title[:44]}")
         time.sleep(DELAY)
     return rows
 
 
-def scrape_shopify_store(session, store_id, domain, parts):
+def scrape_shopify_store(session, store_id, domain, parts, catalogue):
     """Query Shopify's predictive-search JSON endpoint — no HTML parsing needed."""
     rows = []
     base = f"https://{domain}/search/suggest.json"
@@ -196,16 +342,18 @@ def scrape_shopify_store(session, store_id, domain, parts):
             time.sleep(DELAY)
             continue
 
-        # Prefer a hit whose title actually contains the part number.
-        key = re.sub(r"[^a-z0-9]", "", part.lower())
-        best = next(
-            (p for p in products if key in re.sub(r"[^a-z0-9]", "", p.get("title", "").lower())),
-            products[0],
+        best, title, sc, why = pick_best(
+            part, [(p.get("title", ""), p) for p in products], catalogue
         )
+        if best is None:
+            print(f"  - {store_id} / {part}: no confident match ({why}; best {sc:.2f})"
+                  f"{' — closest: ' + title[:40] if title else ''}")
+            time.sleep(DELAY)
+            continue
 
         price = to_number(str(best.get("price", "")))
         if price is None:
-            print(f"  - {store_id} / {part}: matched '{best.get('title')}' but no readable price")
+            print(f"  - {store_id} / {part}: matched '{title}' but no readable price")
             time.sleep(DELAY)
             continue
 
@@ -213,6 +361,7 @@ def scrape_shopify_store(session, store_id, domain, parts):
         if url and not url.startswith("http"):
             url = f"https://{domain}{url}"
 
+        variant = detect_variant(title)
         rows.append({
             "part": part,
             "store": store_id,
@@ -221,16 +370,21 @@ def scrape_shopify_store(session, store_id, domain, parts):
             "stock": "in" if best.get("available", True) else "out",
             "url": url,
             "date": time.strftime("%Y-%m-%d"),
-            "matched_title": best.get("title", ""),
+            "variant": variant,
+            "matched_title": title,
         })
-        print(f"  + {store_id} / {part}: PKR {price}")
+        print(f"  + {store_id} / {part}: PKR {price}"
+              f"{' [' + variant + ']' if variant else ''}  ({sc:.2f}) {title[:44]}")
         time.sleep(DELAY)
     return rows
 
 
 def main():
+    if not HAVE_DEPS:
+        sys.exit("Install dependencies first:  pip install requests beautifulsoup4")
     comps = json.loads((ROOT / "data" / "components.json").read_text(encoding="utf-8"))
-    parts = [c["part"] for c in comps][:MAX_PARTS]
+    catalogue = [c["part"] for c in comps]   # full list, for disambiguation
+    parts = catalogue[:MAX_PARTS]            # subset actually queried
 
     session = requests.Session()
     session.headers.update({"User-Agent": UA, "Accept-Language": "en"})
@@ -239,7 +393,7 @@ def main():
 
     for store_id, domain in SHOPIFY_STORES.items():
         print(f"\n{store_id} ({domain}, Shopify)")
-        all_rows += scrape_shopify_store(session, store_id, domain, parts)
+        all_rows += scrape_shopify_store(session, store_id, domain, parts, catalogue)
 
     if not RULES:
         print("\nRULES is empty — no WooCommerce-style shops configured.")
@@ -247,7 +401,7 @@ def main():
     else:
         for name, rule in RULES.items():
             print(f"\n{name}")
-            all_rows += scrape_store(session, name, rule, parts)
+            all_rows += scrape_store(session, name, rule, parts, catalogue)
 
     if not all_rows:
         print("\nNothing scraped — leaving data/prices.json untouched.")
@@ -272,5 +426,57 @@ def main():
     return 0
 
 
+# ---------------------------------------------------------------------------
+# Self-test — exercises the matcher against real store titles, no network.
+# Every case here came from an actual listing seen in the wild.
+#     python scripts/scrape.py --selftest
+# ---------------------------------------------------------------------------
+SELFTEST_CASES = [
+    # (part, store title, should_match, expected variant)
+    ("Arduino UNO R3", "Arduino Uno R3 Development Board", True, ""),
+    ("Arduino UNO R3", "Arduino Uno SMD Price in Pakistan", True, "SMD"),
+    ("Arduino UNO R3", "Arduino Uno Cable USB", False, ""),
+    ("Arduino UNO R3", "Arduino Uno R3 Case Acrylic", False, ""),
+    ("Arduino UNO R3", "Arduino Uno Starter Kit 37 in 1", False, ""),
+    ("Arduino UNO R3", "Arduino Mega 2560 R3", False, ""),
+    ("Arduino Nano", "Arduino Nano V3 - Breadboard Friendly Board", True, ""),
+    ("Arduino Nano", "Arduino Nano V3 With Cable ATMEGA328", True, "with cable"),
+    ("HC-SR04", "SR04 Arduino Ultrasonic Sensor HC-SR04", True, ""),
+    ("HC-SR04", "Ultrasonic Distance Sensor Module", False, ""),
+    ("SSD1306 0.96\"", "Arduino 0.96 inch IIC OLED Display 128X64 I2C SSD1306 LCD Screen", True, ""),
+    ("SSD1306 0.96\"", "SSD1306 1.3 inch OLED Display", False, ""),
+    ("NE555", "555 Timer IC NE555 LM555 Timer IC in Pakistan", True, ""),
+    ("L298N", "Motor Driver Module L298N Arduino Dual Bridge", True, ""),
+    ("ESP32 DevKit V1", "ESP32-S3 DevKitC-1 N16R8 Development Board", False, ""),
+    ("Resistor kit 1/4W", "Resistor Kit 1/4W 600pcs Assorted", True, "multi-pack"),
+    ("LED 5mm", "RGB LED 5mm Common Cathode", False, ""),
+    ("LED 5mm", "LED 5mm Red Diffused (10 pcs)", True, "multi-pack"),
+    # the catalogue entry for this one is itself "stepper with ULN2003 board",
+    # so tagging the bundle is correct, not noise
+    ("28BYJ-48", "28BYJ-48 5V Stepper Motor with ULN2003 Driver", True, "with driver"),
+    ("DHT11", "DHT22 Temperature Humidity Sensor", False, ""),
+    ("HC-05", "HC-06 Bluetooth Slave Module", False, ""),
+]
+
+
+def selftest():
+    comps = json.loads((ROOT / "data" / "components.json").read_text(encoding="utf-8"))
+    catalogue = [c["part"] for c in comps]
+    print(f"{'':5}{'part':20} {'want':6} {'got':6} {'score':6} {'variant':16} note")
+    print("-" * 104)
+    failures = 0
+    for part, title, want, want_variant in SELFTEST_CASES:
+        got, sc, why = match(part, title, catalogue)
+        variant = detect_variant(title) if got else ""
+        bad = (got != want) or (got and variant != want_variant)
+        failures += bad
+        print(f"{'FAIL ' if bad else 'ok   '}{part:20} {str(want):6} {str(got):6} "
+              f"{sc:<6.2f} {variant or '-':16} {why or title[:34]}")
+    print(f"\n{len(SELFTEST_CASES) - failures}/{len(SELFTEST_CASES)} passed")
+    return 1 if failures else 0
+
+
 if __name__ == "__main__":
+    if "--selftest" in sys.argv:
+        raise SystemExit(selftest())
     raise SystemExit(main())
