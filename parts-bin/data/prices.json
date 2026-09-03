@@ -1,1 +1,11 @@
-[]
+[
+ { "part": "Arduino Nano", "store": "digilog", "price": 660, "currency": "PKR", "stock": "unk", "url": "https://digilog.pk/products/arduino-nano-v3-arduino-nano-in-pakistan", "date": "2026-09-03" },
+ { "part": "Arduino UNO R3", "store": "digilog", "price": 1320, "currency": "PKR", "stock": "unk", "url": "https://digilog.pk/products/arduino-uno", "date": "2026-09-03" },
+ { "part": "DHT11", "store": "digilog", "price": 250, "currency": "PKR", "stock": "unk", "url": "https://digilog.pk/products/dht11-temperature-and-humidity-sensor-digital-relative-humidity-ann-temperature-sensor-module", "date": "2026-09-03" },
+ { "part": "NE555", "store": "digilog", "price": 10, "currency": "PKR", "stock": "unk", "url": "https://digilog.pk/products/555-timer-ic-ne555-lm555-timer-ic-in-pakistan", "date": "2026-09-03" },
+ { "part": "L298N", "store": "digilog", "price": 410, "currency": "PKR", "stock": "in", "url": "https://digilog.pk/products/motor-driver-module-l298n-arduino-dual-bridge", "date": "2026-09-03" },
+ { "part": "HC-SR04", "store": "digilog", "price": 210, "currency": "PKR", "stock": "unk", "url": "https://digilog.pk/products/sr04-arduino-ultrasonic-sensor", "date": "2026-09-03" },
+ { "part": "SSD1306 0.96\"", "store": "digilog", "price": 430, "currency": "PKR", "stock": "in", "url": "https://digilog.pk/products/arduino-0-96-inch-iic-oled-display-128x64-i2c-ssd1306-lcd-screen-in-pakistan", "date": "2026-09-03" },
+ { "part": "ESP8266 NodeMCU", "store": "digilog", "price": 610, "currency": "PKR", "stock": "unk", "url": "https://digilog.pk/products/esp8266-ch340-lolin-nodemcu-wifi-development-board-pakistan", "date": "2026-09-03" },
+ { "part": "HC-05", "store": "digilog", "price": 760, "currency": "PKR", "stock": "unk", "url": "https://digilog.pk/products/05-bluetooth-module-pakistan", "date": "2026-09-03" }
+]

@@ -16,7 +16,7 @@ const today = () => new Date().toISOString().slice(0, 10);
    These are best-effort defaults. If a link lands on the wrong page,
    open Manage data > Stores and fix the URL — it takes ten seconds. */
 const SEED_STORES = [
-  { id:'digilog',   name:'Digilog.pk',     country:'PK', currency:'PKR', url:'https://digilog.pk/?s={q}&post_type=product', enabled:true },
+  { id:'digilog',   name:'Digilog.pk',     country:'PK', currency:'PKR', url:'https://digilog.pk/search?q={q}', enabled:true },
   { id:'circuitpk', name:'Circuit.pk',     country:'PK', currency:'PKR', url:'https://circuit.pk/?s={q}&post_type=product', enabled:true },
   { id:'hallroad',  name:'Hallroad.org',   country:'PK', currency:'PKR', url:'https://hallroad.org/index.php?route=product/search&search={q}', enabled:true },
   { id:'daraz',     name:'Daraz.pk',       country:'PK', currency:'PKR', url:'https://www.daraz.pk/catalog/?q={q}', enabled:true },

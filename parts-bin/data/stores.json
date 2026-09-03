@@ -4,7 +4,7 @@
   "name": "Digilog.pk",
   "country": "PK",
   "currency": "PKR",
-  "url": "https://digilog.pk/?s={q}&post_type=product",
+  "url": "https://digilog.pk/search?q={q}",
   "enabled": true
  },
  {

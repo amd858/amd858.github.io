@@ -2,9 +2,20 @@
 """
 Optional price updater for Parts Bin.
 
-This is a SKELETON, not a finished scraper. Every shop lays its pages out
-differently, so you have to tell it where the price sits on each site by
-filling in the RULES table below.
+Two strategies live here, because Pakistani electronics stores split
+roughly into two platforms:
+
+  SHOPIFY_STORES  - stores running Shopify (confirmed so far: Digilog.pk,
+                    via its sitemap_products_N.xml naming). These expose a
+                    public JSON search endpoint, so no HTML parsing is
+                    needed at all - just call the endpoint and read price
+                    and availability straight out of the response.
+
+  RULES           - stores running WooCommerce or something else, scraped
+                    by CSS selector against their search-results HTML.
+                    This is a SKELETON - every shop lays its markup out
+                    differently, so you fill in a selector set per shop
+                    after inspecting its page. Empty by default.
 
 Before you point this at any shop:
   - Read that shop's terms of service and its /robots.txt.
@@ -17,7 +28,8 @@ Run locally:
     pip install requests beautifulsoup4
     python scripts/scrape.py
 
-It writes data/prices.json, which index.html picks up on load.
+It writes data/prices.json, which index.html picks up on load. Existing
+entries for parts/stores not touched by this run are left as-is.
 """
 
 import json
@@ -41,7 +53,18 @@ UA = ("Mozilla/5.0 (compatible; PartsBinBot/1.0; "
       "personal price tracker; contact: you@example.com)")
 
 # ---------------------------------------------------------------------------
-# RULES — one entry per shop you want to read automatically.
+# SHOPIFY_STORES — store id (must match the id in data/stores.json) -> domain.
+# Uses Shopify's public predictive-search JSON endpoint:
+#   https://{domain}/search/suggest.json?q={term}&resources[type]=product
+# No selectors to maintain; this only breaks if the shop disables the
+# endpoint or migrates off Shopify.
+# ---------------------------------------------------------------------------
+SHOPIFY_STORES = {
+    "digilog": "digilog.pk",
+}
+
+# ---------------------------------------------------------------------------
+# RULES — one entry per WooCommerce-style shop you want to read automatically.
 #
 #   search   : the shop's search URL, with {q} where the term goes
 #   currency : what that shop quotes in
@@ -55,8 +78,8 @@ UA = ("Mozilla/5.0 (compatible; PartsBinBot/1.0; "
 # Leave a shop out of this dict and it simply is not scraped.
 # ---------------------------------------------------------------------------
 RULES = {
-    # "Digilog.pk": {
-    #     "search": "https://digilog.pk/?s={q}&post_type=product",
+    # "Circuit.pk": {
+    #     "search": "https://circuit.pk/?s={q}&post_type=product",
     #     "currency": "PKR",
     #     "item": "li.product",
     #     "title": "h2.woocommerce-loop-product__title",
@@ -72,7 +95,7 @@ def to_number(text):
     """Pull the first number out of something like 'Rs 1,450.00 – Rs 1,600.00'."""
     if not text:
         return None
-    m = PRICE_RE.search(text.replace("\u00a0", " "))
+    m = PRICE_RE.search(text.replace(" ", " "))
     if not m:
         return None
     try:
@@ -142,12 +165,63 @@ def scrape_store(session, store_name, rule, parts):
     return rows
 
 
-def main():
-    if not RULES:
-        print("RULES is empty — nothing to do.")
-        print("Open scripts/scrape.py and fill in a shop before running this.")
-        return 0
+def scrape_shopify_store(session, store_id, domain, parts):
+    """Query Shopify's predictive-search JSON endpoint — no HTML parsing needed."""
+    rows = []
+    base = f"https://{domain}/search/suggest.json"
+    for part in parts:
+        try:
+            r = session.get(
+                base,
+                params={"q": part, "resources[type]": "product", "resources[limit]": 3},
+                timeout=TIMEOUT,
+            )
+            r.raise_for_status()
+            data = r.json()
+        except Exception as e:
+            print(f"  ! {store_id} / {part}: {e}")
+            time.sleep(DELAY)
+            continue
 
+        products = (data.get("resources", {}).get("results", {}) or {}).get("products", [])
+        if not products:
+            print(f"  - {store_id} / {part}: no results")
+            time.sleep(DELAY)
+            continue
+
+        # Prefer a hit whose title actually contains the part number.
+        key = re.sub(r"[^a-z0-9]", "", part.lower())
+        best = next(
+            (p for p in products if key in re.sub(r"[^a-z0-9]", "", p.get("title", "").lower())),
+            products[0],
+        )
+
+        price = to_number(str(best.get("price", "")))
+        if price is None:
+            print(f"  - {store_id} / {part}: matched '{best.get('title')}' but no readable price")
+            time.sleep(DELAY)
+            continue
+
+        url = best.get("url", "")
+        if url and not url.startswith("http"):
+            url = f"https://{domain}{url}"
+
+        rows.append({
+            "part": part,
+            "store": store_id,
+            "price": price,
+            "currency": "PKR",
+            "stock": "in" if best.get("available", True) else "out",
+            "url": url,
+            "date": time.strftime("%Y-%m-%d"),
+            "matched_title": best.get("title", ""),
+        })
+        print(f"  + {store_id} / {part}: PKR {price}")
+        time.sleep(DELAY)
+    return rows
+
+
+def main():
     comps = json.loads((ROOT / "data" / "components.json").read_text(encoding="utf-8"))
     parts = [c["part"] for c in comps][:MAX_PARTS]
 
@@ -155,13 +229,39 @@ def main():
     session.headers.update({"User-Agent": UA, "Accept-Language": "en"})
 
     all_rows = []
-    for name, rule in RULES.items():
-        print(f"\n{name}")
-        all_rows += scrape_store(session, name, rule, parts)
+
+    for store_id, domain in SHOPIFY_STORES.items():
+        print(f"\n{store_id} ({domain}, Shopify)")
+        all_rows += scrape_shopify_store(session, store_id, domain, parts)
+
+    if not RULES:
+        print("\nRULES is empty — no WooCommerce-style shops configured.")
+        print("Open scripts/scrape.py and fill one in if you want more coverage.")
+    else:
+        for name, rule in RULES.items():
+            print(f"\n{name}")
+            all_rows += scrape_store(session, name, rule, parts)
+
+    if not all_rows:
+        print("\nNothing scraped — leaving data/prices.json untouched.")
+        return 0
 
     out = ROOT / "data" / "prices.json"
-    out.write_text(json.dumps(all_rows, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
-    print(f"\nWrote {len(all_rows)} price(s) to {out.relative_to(ROOT)}")
+    existing = []
+    if out.exists():
+        try:
+            existing = json.loads(out.read_text(encoding="utf-8"))
+        except Exception:
+            existing = []
+
+    # Merge: replace any existing (part, store) row with the fresh one,
+    # keep everything else (e.g. rows for stores this run didn't touch).
+    touched = {(r["part"], r["store"]) for r in all_rows}
+    kept = [r for r in existing if (r.get("part"), r.get("store")) not in touched]
+    merged = kept + all_rows
+
+    out.write_text(json.dumps(merged, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+    print(f"\nWrote {len(merged)} price(s) ({len(all_rows)} fresh, {len(kept)} kept) to {out.relative_to(ROOT)}")
     return 0
 
 
