@@ -92,6 +92,14 @@ h1{font-size:1.5rem; font-weight:var(--weight); margin:0 0 4px; letter-spacing:.
   color:var(--ink)}
 .role{font-family:var(--mono); font-size:12.5px; letter-spacing:.05em;
   color:var(--dim); margin:0 0 28px}
+.quicklink{display:inline-flex; align-items:center; gap:9px; margin:6px 0 4px;
+  padding:9px 16px; border:1px solid var(--line); border-radius:100px;
+  color:var(--ink); text-decoration:none; font-size:14px;
+  transition:border-color .3s, background-color .3s}
+.quicklink:hover{border-color:var(--accent); background:var(--paper)}
+.quicklink .dot{width:7px; height:7px; border-radius:50%; background:var(--green); flex:none}
+.quicklink b{color:var(--accent); font-weight:600}
+.quicklink .arrow{color:var(--dim); margin-left:2px}
 .band{display:flex; height:5px; margin:0 0 26px; border-radius:2px; overflow:hidden}
 .band i{flex:1}
 .band i:nth-child(1){background:var(--green)}
@@ -358,6 +366,8 @@ body>h1,body>.role,body>.band,body>.intro,body>section,body>footer{position:rela
 mounts in. Self-taught, with a machine shop behind the bench.</p>
 <p class="intro">Available for freelance work and embedded roles, local or remote.</p>
 <p class="intro hint">Tap any project for the parts, the firmware and what was tricky.</p>
+
+<a class="quicklink" href="parts-bin/"><span class="dot" aria-hidden="true"></span> <b>Parts Bin</b> — component price finder, live app <span class="arrow">→</span></a>
 
 <section class="s-embed">
 <h2><svg><use href="#i-chip"/></svg>Embedded systems</h2>
