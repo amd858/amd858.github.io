@@ -60,7 +60,13 @@ UA = ("Mozilla/5.0 (compatible; PartsBinBot/1.0; "
 # endpoint or migrates off Shopify.
 # ---------------------------------------------------------------------------
 SHOPIFY_STORES = {
+    # Each confirmed via DNS: the domain CNAMEs to *.myshopify.com and/or
+    # resolves into Shopify's 23.227.38.0/24 range.
     "digilog": "digilog.pk",
+    "chippk": "chip.pk",
+    "hallroadlahore": "hallroadlahore.pk",
+    "electronicsoln": "electronicsolution.pk",
+    "modernelec": "modernelectronics.pk",
 }
 
 # ---------------------------------------------------------------------------

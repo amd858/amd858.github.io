@@ -37,7 +37,7 @@
   "country": "PK",
   "currency": "PKR",
   "url": "https://microtronicspakistan.com/?s={q}&post_type=product",
-  "enabled": true
+  "enabled": false
  },
  {
   "id": "instock",
@@ -60,7 +60,7 @@
   "name": "Chip.pk",
   "country": "PK",
   "currency": "PKR",
-  "url": "https://chip.pk/?s={q}&post_type=product",
+  "url": "https://chip.pk/search?q={q}",
   "enabled": true
  },
  {
@@ -84,7 +84,7 @@
   "name": "Hallroad Lahore",
   "country": "PK",
   "currency": "PKR",
-  "url": "https://hallroadlahore.pk/?s={q}&post_type=product",
+  "url": "https://hallroadlahore.pk/search?q={q}",
   "enabled": true
  },
  {
@@ -204,7 +204,7 @@
   "name": "Electronic Solution",
   "country": "PK",
   "currency": "PKR",
-  "url": "https://electronicsolution.pk/?s={q}&post_type=product",
+  "url": "https://electronicsolution.pk/search?q={q}",
   "enabled": true
  },
  {
@@ -252,7 +252,7 @@
   "name": "Modern Electronics",
   "country": "PK",
   "currency": "PKR",
-  "url": "https://modernelectronics.com.pk/?s={q}&post_type=product",
+  "url": "https://modernelectronics.pk/search?q={q}",
   "enabled": true
  },
  {

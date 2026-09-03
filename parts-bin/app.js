@@ -20,17 +20,19 @@ const SEED_STORES = [
   { id:'circuitpk', name:'Circuit.pk',     country:'PK', currency:'PKR', url:'https://circuit.pk/?s={q}&post_type=product', enabled:true },
   { id:'hallroad',  name:'Hallroad.org',   country:'PK', currency:'PKR', url:'https://hallroad.org/index.php?route=product/search&search={q}', enabled:true },
   { id:'daraz',     name:'Daraz.pk',       country:'PK', currency:'PKR', url:'https://www.daraz.pk/catalog/?q={q}', enabled:true },
-  { id:'microtron', name:'Microtronics.pk',country:'PK', currency:'PKR', url:'https://microtronicspakistan.com/?s={q}&post_type=product', enabled:true },
+  // microtronicspakistan.com no longer resolves in DNS (nor do microtronics.pk /
+  // microtronics.com.pk) — shop looks gone. Left here, disabled, in case it returns.
+  { id:'microtron', name:'Microtronics.pk',country:'PK', currency:'PKR', url:'https://microtronicspakistan.com/?s={q}&post_type=product', enabled:false },
   // --- more Pakistan-based stores, added from a 2026 store directory. URLs are
   // best-effort guesses at each shop's search address (mostly WooCommerce's
   // default ?s=&post_type=product) — same caveat as the original list above.
   // Wrong link? Manage data > Stores > Edit and fix it, ten seconds.
   { id:'instock', name:'InStock.pk', country:'PK', currency:'PKR', url:'https://instock.pk/catalogsearch/result/?q={q}', enabled:false },
   { id:'electrobes', name:'Electrobes', country:'PK', currency:'PKR', url:'https://electrobes.com/?s={q}&post_type=product', enabled:true },
-  { id:'chippk', name:'Chip.pk', country:'PK', currency:'PKR', url:'https://chip.pk/?s={q}&post_type=product', enabled:true },
+  { id:'chippk', name:'Chip.pk', country:'PK', currency:'PKR', url:'https://chip.pk/search?q={q}', enabled:true },
   { id:'artofcircuits', name:'Art of Circuits', country:'PK', currency:'PKR', url:'https://artofcircuits.com/?s={q}&post_type=product', enabled:true },
   { id:'mreeco', name:'MREECO', country:'PK', currency:'PKR', url:'https://mreeco.com/?s={q}&post_type=product', enabled:true },
-  { id:'hallroadlahore', name:'Hallroad Lahore', country:'PK', currency:'PKR', url:'https://hallroadlahore.pk/?s={q}&post_type=product', enabled:true },
+  { id:'hallroadlahore', name:'Hallroad Lahore', country:'PK', currency:'PKR', url:'https://hallroadlahore.pk/search?q={q}', enabled:true },
   { id:'rawlix', name:'Rawlix', country:'PK', currency:'PKR', url:'https://rawlix.com/?s={q}&post_type=product', enabled:true },
   { id:'mekatroniks', name:'Mekatroniks', country:'PK', currency:'PKR', url:'https://mekatroniks.com/?s={q}&post_type=product', enabled:true },
   { id:'electronicshub', name:'Electronics Hub', country:'PK', currency:'PKR', url:'https://electronicshub.pk/?s={q}&post_type=product', enabled:true },
@@ -45,13 +47,13 @@ const SEED_STORES = [
   { id:'daroghawala', name:'Daroghawala', country:'PK', currency:'PKR', url:'https://daroghawala.org/?s={q}&post_type=product', enabled:true },
   { id:'megaeshop', name:'MegaeShop', country:'PK', currency:'PKR', url:'https://megaeshop.pk/?s={q}&post_type=product', enabled:true },
   { id:'evselectro', name:'EVE-eVision', country:'PK', currency:'PKR', url:'https://evselectro.com/?s={q}&post_type=product', enabled:true },
-  { id:'electronicsoln', name:'Electronic Solution', country:'PK', currency:'PKR', url:'https://electronicsolution.pk/?s={q}&post_type=product', enabled:true },
+  { id:'electronicsoln', name:'Electronic Solution', country:'PK', currency:'PKR', url:'https://electronicsolution.pk/search?q={q}', enabled:true },
   { id:'hallroadpk', name:'HallroadPK', country:'PK', currency:'PKR', url:'https://hallroadpk.com/?s={q}&post_type=product', enabled:true },
   { id:'electronicstorepk', name:'Electronic Store', country:'PK', currency:'PKR', url:'https://electronicstore.pk/?s={q}&post_type=product', enabled:true },
   { id:'ewall', name:'EWALL', country:'PK', currency:'PKR', url:'https://ewall.com.pk/?s={q}&post_type=product', enabled:true },
   { id:'dcart', name:'DCart', country:'PK', currency:'PKR', url:'https://dcart.pk/?s={q}&post_type=product', enabled:true },
   { id:'axiselectronics', name:'Axis Electronics', country:'PK', currency:'PKR', url:'https://axiselectronics.com.pk/?s={q}&post_type=product', enabled:true },
-  { id:'modernelec', name:'Modern Electronics', country:'PK', currency:'PKR', url:'https://modernelectronics.com.pk/?s={q}&post_type=product', enabled:true },
+  { id:'modernelec', name:'Modern Electronics', country:'PK', currency:'PKR', url:'https://modernelectronics.pk/search?q={q}', enabled:true },
   { id:'electronation', name:'Electronation', country:'PK', currency:'PKR', url:'https://electronation.pk/?s={q}&post_type=product', enabled:true },
   { id:'hallroaddotcom', name:'Hallroad.com.pk', country:'PK', currency:'PKR', url:'https://hallroad.com.pk/?s={q}&post_type=product', enabled:true },
   { id:'epal', name:'epal.pk', country:'PK', currency:'PKR', url:'https://epal.pk/?s={q}&post_type=product', enabled:true },
