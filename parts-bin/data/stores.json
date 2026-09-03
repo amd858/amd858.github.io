@@ -40,6 +40,278 @@
   "enabled": true
  },
  {
+  "id": "instock",
+  "name": "InStock.pk",
+  "country": "PK",
+  "currency": "PKR",
+  "url": "https://instock.pk/catalogsearch/result/?q={q}",
+  "enabled": false
+ },
+ {
+  "id": "electrobes",
+  "name": "Electrobes",
+  "country": "PK",
+  "currency": "PKR",
+  "url": "https://electrobes.com/?s={q}&post_type=product",
+  "enabled": true
+ },
+ {
+  "id": "chippk",
+  "name": "Chip.pk",
+  "country": "PK",
+  "currency": "PKR",
+  "url": "https://chip.pk/?s={q}&post_type=product",
+  "enabled": true
+ },
+ {
+  "id": "artofcircuits",
+  "name": "Art of Circuits",
+  "country": "PK",
+  "currency": "PKR",
+  "url": "https://artofcircuits.com/?s={q}&post_type=product",
+  "enabled": true
+ },
+ {
+  "id": "mreeco",
+  "name": "MREECO",
+  "country": "PK",
+  "currency": "PKR",
+  "url": "https://mreeco.com/?s={q}&post_type=product",
+  "enabled": true
+ },
+ {
+  "id": "hallroadlahore",
+  "name": "Hallroad Lahore",
+  "country": "PK",
+  "currency": "PKR",
+  "url": "https://hallroadlahore.pk/?s={q}&post_type=product",
+  "enabled": true
+ },
+ {
+  "id": "rawlix",
+  "name": "Rawlix",
+  "country": "PK",
+  "currency": "PKR",
+  "url": "https://rawlix.com/?s={q}&post_type=product",
+  "enabled": true
+ },
+ {
+  "id": "mekatroniks",
+  "name": "Mekatroniks",
+  "country": "PK",
+  "currency": "PKR",
+  "url": "https://mekatroniks.com/?s={q}&post_type=product",
+  "enabled": true
+ },
+ {
+  "id": "electronicshub",
+  "name": "Electronics Hub",
+  "country": "PK",
+  "currency": "PKR",
+  "url": "https://electronicshub.pk/?s={q}&post_type=product",
+  "enabled": true
+ },
+ {
+  "id": "sciencestore",
+  "name": "ScienceStore.pk",
+  "country": "PK",
+  "currency": "PKR",
+  "url": "https://sciencestore.pk/?s={q}&post_type=product",
+  "enabled": true
+ },
+ {
+  "id": "roboticspk",
+  "name": "RoboticsPK",
+  "country": "PK",
+  "currency": "PKR",
+  "url": "https://roboticspk.com/?s={q}&post_type=product",
+  "enabled": true
+ },
+ {
+  "id": "robonation",
+  "name": "Robonation Pakistan",
+  "country": "PK",
+  "currency": "PKR",
+  "url": "https://robonationpakistan.com/?s={q}&post_type=product",
+  "enabled": true
+ },
+ {
+  "id": "robostan",
+  "name": "Robostan",
+  "country": "PK",
+  "currency": "PKR",
+  "url": "https://robostan.pk/?s={q}&post_type=product",
+  "enabled": true
+ },
+ {
+  "id": "arduinocorner",
+  "name": "Arduino Corner",
+  "country": "PK",
+  "currency": "PKR",
+  "url": "https://arduinocorner.com/?s={q}&post_type=product",
+  "enabled": true
+ },
+ {
+  "id": "collegeroad",
+  "name": "College Road Online",
+  "country": "PK",
+  "currency": "PKR",
+  "url": "https://collegeroadonline.com/?s={q}&post_type=product",
+  "enabled": true
+ },
+ {
+  "id": "arduinopak",
+  "name": "Arduino Megatronics",
+  "country": "PK",
+  "currency": "PKR",
+  "url": "https://arduinopak.com/?s={q}&post_type=product",
+  "enabled": true
+ },
+ {
+  "id": "multanelec",
+  "name": "Multan Electronics",
+  "country": "PK",
+  "currency": "PKR",
+  "url": "https://multanelectronics.com/?s={q}&post_type=product",
+  "enabled": true
+ },
+ {
+  "id": "daroghawala",
+  "name": "Daroghawala",
+  "country": "PK",
+  "currency": "PKR",
+  "url": "https://daroghawala.org/?s={q}&post_type=product",
+  "enabled": true
+ },
+ {
+  "id": "megaeshop",
+  "name": "MegaeShop",
+  "country": "PK",
+  "currency": "PKR",
+  "url": "https://megaeshop.pk/?s={q}&post_type=product",
+  "enabled": true
+ },
+ {
+  "id": "evselectro",
+  "name": "EVE-eVision",
+  "country": "PK",
+  "currency": "PKR",
+  "url": "https://evselectro.com/?s={q}&post_type=product",
+  "enabled": true
+ },
+ {
+  "id": "electronicsoln",
+  "name": "Electronic Solution",
+  "country": "PK",
+  "currency": "PKR",
+  "url": "https://electronicsolution.pk/?s={q}&post_type=product",
+  "enabled": true
+ },
+ {
+  "id": "hallroadpk",
+  "name": "HallroadPK",
+  "country": "PK",
+  "currency": "PKR",
+  "url": "https://hallroadpk.com/?s={q}&post_type=product",
+  "enabled": true
+ },
+ {
+  "id": "electronicstorepk",
+  "name": "Electronic Store",
+  "country": "PK",
+  "currency": "PKR",
+  "url": "https://electronicstore.pk/?s={q}&post_type=product",
+  "enabled": true
+ },
+ {
+  "id": "ewall",
+  "name": "EWALL",
+  "country": "PK",
+  "currency": "PKR",
+  "url": "https://ewall.com.pk/?s={q}&post_type=product",
+  "enabled": true
+ },
+ {
+  "id": "dcart",
+  "name": "DCart",
+  "country": "PK",
+  "currency": "PKR",
+  "url": "https://dcart.pk/?s={q}&post_type=product",
+  "enabled": true
+ },
+ {
+  "id": "axiselectronics",
+  "name": "Axis Electronics",
+  "country": "PK",
+  "currency": "PKR",
+  "url": "https://axiselectronics.com.pk/?s={q}&post_type=product",
+  "enabled": true
+ },
+ {
+  "id": "modernelec",
+  "name": "Modern Electronics",
+  "country": "PK",
+  "currency": "PKR",
+  "url": "https://modernelectronics.com.pk/?s={q}&post_type=product",
+  "enabled": true
+ },
+ {
+  "id": "electronation",
+  "name": "Electronation",
+  "country": "PK",
+  "currency": "PKR",
+  "url": "https://electronation.pk/?s={q}&post_type=product",
+  "enabled": true
+ },
+ {
+  "id": "hallroaddotcom",
+  "name": "Hallroad.com.pk",
+  "country": "PK",
+  "currency": "PKR",
+  "url": "https://hallroad.com.pk/?s={q}&post_type=product",
+  "enabled": true
+ },
+ {
+  "id": "epal",
+  "name": "epal.pk",
+  "country": "PK",
+  "currency": "PKR",
+  "url": "https://epal.pk/?s={q}&post_type=product",
+  "enabled": true
+ },
+ {
+  "id": "denontek",
+  "name": "Denontek",
+  "country": "PK",
+  "currency": "PKR",
+  "url": "https://denontek.com.pk/?s={q}&post_type=product",
+  "enabled": true
+ },
+ {
+  "id": "arduinostorepk",
+  "name": "arduinostore.pk",
+  "country": "PK",
+  "currency": "PKR",
+  "url": "https://arduinostore.pk/?s={q}&post_type=product",
+  "enabled": true
+ },
+ {
+  "id": "icmaster",
+  "name": "IC Master",
+  "country": "PK",
+  "currency": "PKR",
+  "url": "https://icmasteronline.com/?s={q}&post_type=product",
+  "enabled": true
+ },
+ {
+  "id": "tejar",
+  "name": "Tejar.pk",
+  "country": "PK",
+  "currency": "PKR",
+  "url": "https://www.tejar.pk/catalog/search?q={q}",
+  "enabled": false
+ },
+ {
   "id": "robu",
   "name": "Robu.in",
   "country": "IN",
@@ -50,8 +322,8 @@
  {
   "id": "w11stop",
   "name": "W11Stop",
-  "country": "IN",
-  "currency": "INR",
+  "country": "PK",
+  "currency": "PKR",
   "url": "https://www.w11stop.com/search?q={q}",
   "enabled": false
  },
