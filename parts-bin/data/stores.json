@@ -312,6 +312,30 @@
   "enabled": false
  },
  {
+  "id": "epro",
+  "name": "Epro.pk",
+  "country": "PK",
+  "currency": "PKR",
+  "url": "https://epro.pk/?s={q}&post_type=product",
+  "enabled": true
+ },
+ {
+  "id": "smarteshop",
+  "name": "SmartEshop.pk",
+  "country": "PK",
+  "currency": "PKR",
+  "url": "https://smarteshop.pk/search?q={q}",
+  "enabled": true
+ },
+ {
+  "id": "digilogcompk",
+  "name": "Digilog.com.pk",
+  "country": "PK",
+  "currency": "PKR",
+  "url": "https://digilog.com.pk/?s={q}&post_type=product",
+  "enabled": true
+ },
+ {
   "id": "robu",
   "name": "Robu.in",
   "country": "IN",

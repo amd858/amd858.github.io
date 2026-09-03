@@ -3,6 +3,7 @@
  { "part": "Arduino Nano", "store": "hallroadlahore", "price": 660, "currency": "PKR", "stock": "unk", "url": "https://hallroadlahore.pk/products/arduino-nano-v3-arduino-nano-in-pakistan", "date": "2026-09-03" },
  { "part": "Arduino Nano", "store": "electronicstorepk", "price": 700, "currency": "PKR", "stock": "unk", "url": "https://electronicstore.pk/product/arduino-nano-price-in-pakistan/", "date": "2026-09-03" },
  { "part": "Arduino Nano", "store": "w11stop", "price": 720, "currency": "PKR", "stock": "unk", "url": "https://w11stop.com/arduino-nano", "date": "2026-09-03" },
+ { "part": "Arduino Nano", "store": "epro", "price": 730, "currency": "PKR", "stock": "unk", "url": "https://epro.pk/product/arduino-nano-v3-0-in-pakistan/", "date": "2026-09-03" },
 
  { "part": "Arduino UNO R3", "store": "digilog", "price": 1320, "currency": "PKR", "stock": "unk", "url": "https://digilog.pk/products/arduino-uno", "date": "2026-09-03" },
 
@@ -11,6 +12,7 @@
  { "part": "ESP8266 NodeMCU", "store": "digilog", "price": 610, "currency": "PKR", "stock": "unk", "url": "https://digilog.pk/products/esp8266-ch340-lolin-nodemcu-wifi-development-board-pakistan", "date": "2026-09-03" },
 
  { "part": "DHT11", "store": "digilog", "price": 250, "currency": "PKR", "stock": "unk", "url": "https://digilog.pk/products/dht11-temperature-and-humidity-sensor-digital-relative-humidity-ann-temperature-sensor-module", "date": "2026-09-03" },
+ { "part": "DHT11", "store": "epro", "price": 260, "currency": "PKR", "stock": "unk", "url": "https://epro.pk/product/dht11-temperature-and-humidity-sensor-module-in-pakistan/", "date": "2026-09-03" },
 
  { "part": "NE555", "store": "digilog", "price": 10, "currency": "PKR", "stock": "unk", "url": "https://digilog.pk/products/555-timer-ic-ne555-lm555-timer-ic-in-pakistan", "date": "2026-09-03" },
 

@@ -61,6 +61,12 @@ const SEED_STORES = [
   { id:'arduinostorepk', name:'arduinostore.pk', country:'PK', currency:'PKR', url:'https://arduinostore.pk/?s={q}&post_type=product', enabled:true },
   { id:'icmaster', name:'IC Master', country:'PK', currency:'PKR', url:'https://icmasteronline.com/?s={q}&post_type=product', enabled:true },
   { id:'tejar', name:'Tejar.pk', country:'PK', currency:'PKR', url:'https://www.tejar.pk/catalog/search?q={q}', enabled:false },
+  // Found by searching for real product pages, then confirmed by DNS.
+  // epro.pk and digilog.com.pk serve /product/ and /product-category/ paths
+  // (WooCommerce); smarteshop.pk serves /products/ and sits on Shopify's IPs.
+  { id:'epro', name:'Epro.pk', country:'PK', currency:'PKR', url:'https://epro.pk/?s={q}&post_type=product', enabled:true },
+  { id:'smarteshop', name:'SmartEshop.pk', country:'PK', currency:'PKR', url:'https://smarteshop.pk/search?q={q}', enabled:true },
+  { id:'digilogcompk', name:'Digilog.com.pk', country:'PK', currency:'PKR', url:'https://digilog.com.pk/?s={q}&post_type=product', enabled:true },
   { id:'robu',      name:'Robu.in',        country:'IN', currency:'INR', url:'https://robu.in/?s={q}&post_type=product', enabled:true },
   { id:'w11stop',   name:'W11Stop',        country:'PK', currency:'PKR', url:'https://www.w11stop.com/search?q={q}', enabled:false },
   { id:'lcsc',      name:'LCSC',           country:'CN', currency:'USD', url:'https://www.lcsc.com/search?q={q}', enabled:true },

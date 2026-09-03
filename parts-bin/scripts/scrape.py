@@ -67,6 +67,7 @@ SHOPIFY_STORES = {
     "hallroadlahore": "hallroadlahore.pk",
     "electronicsoln": "electronicsolution.pk",
     "modernelec": "modernelectronics.pk",
+    "smarteshop": "smarteshop.pk",
 }
 
 # ---------------------------------------------------------------------------
