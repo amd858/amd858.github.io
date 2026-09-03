@@ -1,0 +1,1010 @@
+[
+ {
+  "part": "ESP32 DevKit V1",
+  "name": "ESP32 WiFi + Bluetooth dev board",
+  "category": "Boards",
+  "package": "38-pin",
+  "tags": "wifi bluetooth iot esp"
+ },
+ {
+  "part": "ESP8266 NodeMCU",
+  "name": "NodeMCU Lua WiFi board",
+  "category": "Boards",
+  "package": "CP2102",
+  "tags": "wifi iot esp nodemcu"
+ },
+ {
+  "part": "ESP-01",
+  "name": "ESP8266 serial WiFi module",
+  "category": "Modules",
+  "package": "8-pin",
+  "tags": "wifi esp serial"
+ },
+ {
+  "part": "Arduino UNO R3",
+  "name": "ATmega328P dev board",
+  "category": "Boards",
+  "package": "DIP/SMD",
+  "tags": "arduino uno starter"
+ },
+ {
+  "part": "Arduino Nano",
+  "name": "Compact ATmega328P board",
+  "category": "Boards",
+  "package": "30-pin",
+  "tags": "arduino nano small"
+ },
+ {
+  "part": "Arduino Mega 2560",
+  "name": "ATmega2560 board, 54 I/O",
+  "category": "Boards",
+  "package": "R3",
+  "tags": "arduino mega"
+ },
+ {
+  "part": "Arduino Pro Micro",
+  "name": "ATmega32U4 board, native USB",
+  "category": "Boards",
+  "package": "5V/16MHz",
+  "tags": "arduino leonardo hid"
+ },
+ {
+  "part": "Raspberry Pi Pico",
+  "name": "RP2040 microcontroller board",
+  "category": "Boards",
+  "package": "40-pin",
+  "tags": "rpi pico rp2040"
+ },
+ {
+  "part": "Raspberry Pi Pico W",
+  "name": "RP2040 board with WiFi",
+  "category": "Boards",
+  "package": "40-pin",
+  "tags": "rpi pico wifi"
+ },
+ {
+  "part": "STM32F103C8T6",
+  "name": "Blue Pill ARM Cortex-M3 board",
+  "category": "Boards",
+  "package": "LQFP48",
+  "tags": "stm32 bluepill arm"
+ },
+ {
+  "part": "ATmega328P-PU",
+  "name": "8-bit AVR microcontroller",
+  "category": "ICs",
+  "package": "DIP-28",
+  "tags": "avr atmega arduino chip"
+ },
+ {
+  "part": "ATmega16A",
+  "name": "8-bit AVR microcontroller",
+  "category": "ICs",
+  "package": "DIP-40",
+  "tags": "avr atmega"
+ },
+ {
+  "part": "ATtiny85",
+  "name": "8-bit AVR, 8 pin",
+  "category": "ICs",
+  "package": "DIP-8",
+  "tags": "avr attiny tiny"
+ },
+ {
+  "part": "PIC16F877A",
+  "name": "8-bit PIC microcontroller",
+  "category": "ICs",
+  "package": "DIP-40",
+  "tags": "pic microchip"
+ },
+ {
+  "part": "PIC16F628A",
+  "name": "8-bit PIC microcontroller",
+  "category": "ICs",
+  "package": "DIP-18",
+  "tags": "pic microchip"
+ },
+ {
+  "part": "AT89S52",
+  "name": "8051 family microcontroller",
+  "category": "ICs",
+  "package": "DIP-40",
+  "tags": "8051 atmel"
+ },
+ {
+  "part": "DHT11",
+  "name": "Temperature + humidity sensor",
+  "category": "Sensors",
+  "package": "3-pin module",
+  "tags": "temperature humidity"
+ },
+ {
+  "part": "DHT22",
+  "name": "Temp + humidity sensor, higher accuracy",
+  "category": "Sensors",
+  "package": "AM2302",
+  "tags": "temperature humidity am2302"
+ },
+ {
+  "part": "HC-SR04",
+  "name": "Ultrasonic distance sensor",
+  "category": "Sensors",
+  "package": "4-pin",
+  "tags": "ultrasonic distance sonar"
+ },
+ {
+  "part": "MPU6050",
+  "name": "6-axis gyro + accelerometer",
+  "category": "Sensors",
+  "package": "GY-521",
+  "tags": "imu gyro accelerometer i2c"
+ },
+ {
+  "part": "MPU9250",
+  "name": "9-axis IMU",
+  "category": "Sensors",
+  "package": "GY-91",
+  "tags": "imu magnetometer"
+ },
+ {
+  "part": "BMP280",
+  "name": "Barometric pressure + temp sensor",
+  "category": "Sensors",
+  "package": "GY-BMP280",
+  "tags": "pressure altitude i2c"
+ },
+ {
+  "part": "BME280",
+  "name": "Pressure, temp and humidity sensor",
+  "category": "Sensors",
+  "package": "I2C/SPI",
+  "tags": "pressure humidity"
+ },
+ {
+  "part": "DS18B20",
+  "name": "1-Wire digital temperature sensor",
+  "category": "Sensors",
+  "package": "TO-92",
+  "tags": "temperature onewire waterproof"
+ },
+ {
+  "part": "LM35",
+  "name": "Analog temperature sensor",
+  "category": "Sensors",
+  "package": "TO-92",
+  "tags": "temperature analog"
+ },
+ {
+  "part": "HC-SR501",
+  "name": "PIR motion sensor",
+  "category": "Sensors",
+  "package": "module",
+  "tags": "pir motion infrared"
+ },
+ {
+  "part": "MQ-2",
+  "name": "Smoke and combustible gas sensor",
+  "category": "Sensors",
+  "package": "module",
+  "tags": "gas smoke lpg"
+ },
+ {
+  "part": "MQ-135",
+  "name": "Air quality gas sensor",
+  "category": "Sensors",
+  "package": "module",
+  "tags": "gas air quality"
+ },
+ {
+  "part": "LDR 5mm",
+  "name": "Light dependent resistor",
+  "category": "Passives",
+  "package": "5mm",
+  "tags": "ldr photoresistor light"
+ },
+ {
+  "part": "ACS712",
+  "name": "Hall-effect current sensor",
+  "category": "Sensors",
+  "package": "5A/20A/30A",
+  "tags": "current sensor hall"
+ },
+ {
+  "part": "INA219",
+  "name": "High-side DC current/power monitor",
+  "category": "Sensors",
+  "package": "I2C",
+  "tags": "current power i2c"
+ },
+ {
+  "part": "HX711",
+  "name": "24-bit ADC for load cells",
+  "category": "Modules",
+  "package": "module",
+  "tags": "loadcell weight scale adc"
+ },
+ {
+  "part": "MAX30102",
+  "name": "Pulse oximeter + heart rate sensor",
+  "category": "Sensors",
+  "package": "I2C",
+  "tags": "heartrate spo2 pulse"
+ },
+ {
+  "part": "TCS3200",
+  "name": "Colour recognition sensor",
+  "category": "Sensors",
+  "package": "module",
+  "tags": "colour sensor"
+ },
+ {
+  "part": "Soil moisture sensor",
+  "name": "Capacitive soil moisture probe",
+  "category": "Sensors",
+  "package": "v1.2",
+  "tags": "soil moisture plant"
+ },
+ {
+  "part": "IR obstacle sensor",
+  "name": "Infrared obstacle avoidance module",
+  "category": "Sensors",
+  "package": "module",
+  "tags": "infrared obstacle"
+ },
+ {
+  "part": "TCRT5000",
+  "name": "Reflective IR line sensor",
+  "category": "Sensors",
+  "package": "module",
+  "tags": "line follower infrared"
+ },
+ {
+  "part": "Flame sensor",
+  "name": "IR flame detection module",
+  "category": "Sensors",
+  "package": "module",
+  "tags": "flame fire"
+ },
+ {
+  "part": "HC-05",
+  "name": "Bluetooth SPP master/slave module",
+  "category": "Modules",
+  "package": "6-pin",
+  "tags": "bluetooth serial"
+ },
+ {
+  "part": "HC-06",
+  "name": "Bluetooth slave module",
+  "category": "Modules",
+  "package": "4-pin",
+  "tags": "bluetooth serial"
+ },
+ {
+  "part": "NRF24L01",
+  "name": "2.4GHz transceiver module",
+  "category": "Modules",
+  "package": "SMD/PA+LNA",
+  "tags": "wireless rf 2.4ghz"
+ },
+ {
+  "part": "SX1278",
+  "name": "LoRa 433MHz transceiver",
+  "category": "Modules",
+  "package": "Ra-02",
+  "tags": "lora rf longrange"
+ },
+ {
+  "part": "SIM800L",
+  "name": "Quad-band GSM/GPRS module",
+  "category": "Modules",
+  "package": "module",
+  "tags": "gsm gprs sms sim"
+ },
+ {
+  "part": "NEO-6M",
+  "name": "GPS receiver module with antenna",
+  "category": "Modules",
+  "package": "module",
+  "tags": "gps location"
+ },
+ {
+  "part": "RC522",
+  "name": "13.56MHz RFID reader/writer",
+  "category": "Modules",
+  "package": "SPI",
+  "tags": "rfid nfc mifare"
+ },
+ {
+  "part": "PN532",
+  "name": "NFC reader module",
+  "category": "Modules",
+  "package": "I2C/SPI",
+  "tags": "nfc rfid"
+ },
+ {
+  "part": "MicroSD card module",
+  "name": "SPI microSD breakout",
+  "category": "Modules",
+  "package": "SPI",
+  "tags": "sd card storage"
+ },
+ {
+  "part": "DS3231",
+  "name": "Precision RTC with temp compensation",
+  "category": "Modules",
+  "package": "ZS-042",
+  "tags": "rtc clock time i2c"
+ },
+ {
+  "part": "DS1307",
+  "name": "Real time clock module",
+  "category": "Modules",
+  "package": "Tiny RTC",
+  "tags": "rtc clock time"
+ },
+ {
+  "part": "W5500",
+  "name": "Ethernet controller module",
+  "category": "Modules",
+  "package": "SPI",
+  "tags": "ethernet lan network"
+ },
+ {
+  "part": "ENC28J60",
+  "name": "Ethernet module",
+  "category": "Modules",
+  "package": "SPI",
+  "tags": "ethernet lan"
+ },
+ {
+  "part": "CP2102",
+  "name": "USB to UART bridge",
+  "category": "Modules",
+  "package": "module",
+  "tags": "usb serial ttl programmer"
+ },
+ {
+  "part": "FT232RL",
+  "name": "USB to serial adapter",
+  "category": "Modules",
+  "package": "module",
+  "tags": "usb serial ftdi"
+ },
+ {
+  "part": "CH340G",
+  "name": "USB to serial converter",
+  "category": "ICs",
+  "package": "SOP-16",
+  "tags": "usb serial"
+ },
+ {
+  "part": "LCD 16x2",
+  "name": "Character LCD, HD44780",
+  "category": "Displays",
+  "package": "16x2",
+  "tags": "lcd display character"
+ },
+ {
+  "part": "LCD 20x4",
+  "name": "Character LCD, HD44780",
+  "category": "Displays",
+  "package": "20x4",
+  "tags": "lcd display character"
+ },
+ {
+  "part": "PCF8574 I2C backpack",
+  "name": "I2C adapter for character LCD",
+  "category": "Modules",
+  "package": "I2C",
+  "tags": "lcd i2c backpack"
+ },
+ {
+  "part": "SSD1306 0.96\"",
+  "name": "128x64 monochrome OLED",
+  "category": "Displays",
+  "package": "I2C/SPI",
+  "tags": "oled display i2c"
+ },
+ {
+  "part": "SSD1306 1.3\"",
+  "name": "128x64 OLED (SH1106 variant)",
+  "category": "Displays",
+  "package": "I2C",
+  "tags": "oled display"
+ },
+ {
+  "part": "ST7735 1.8\"",
+  "name": "128x160 colour TFT",
+  "category": "Displays",
+  "package": "SPI",
+  "tags": "tft colour display"
+ },
+ {
+  "part": "ILI9341 2.4\"",
+  "name": "240x320 colour TFT, touch option",
+  "category": "Displays",
+  "package": "SPI",
+  "tags": "tft touch display"
+ },
+ {
+  "part": "TM1637",
+  "name": "4-digit 7-segment display module",
+  "category": "Displays",
+  "package": "module",
+  "tags": "7segment digit clock"
+ },
+ {
+  "part": "MAX7219",
+  "name": "8x8 LED matrix driver module",
+  "category": "Displays",
+  "package": "module",
+  "tags": "matrix led dotmatrix"
+ },
+ {
+  "part": "Nokia 5110",
+  "name": "84x48 graphic LCD",
+  "category": "Displays",
+  "package": "PCD8544",
+  "tags": "lcd graphic nokia"
+ },
+ {
+  "part": "L298N",
+  "name": "Dual H-bridge motor driver module",
+  "category": "Drivers",
+  "package": "module",
+  "tags": "motor driver hbridge"
+ },
+ {
+  "part": "L293D",
+  "name": "Quadruple half-H driver",
+  "category": "ICs",
+  "package": "DIP-16",
+  "tags": "motor driver hbridge"
+ },
+ {
+  "part": "ULN2003",
+  "name": "Darlington array / stepper driver",
+  "category": "ICs",
+  "package": "DIP-16",
+  "tags": "darlington stepper driver"
+ },
+ {
+  "part": "ULN2803",
+  "name": "8-channel Darlington array",
+  "category": "ICs",
+  "package": "DIP-18",
+  "tags": "darlington driver"
+ },
+ {
+  "part": "A4988",
+  "name": "Stepper motor driver module",
+  "category": "Drivers",
+  "package": "module",
+  "tags": "stepper driver 3dprinter"
+ },
+ {
+  "part": "DRV8825",
+  "name": "Stepper driver, higher current",
+  "category": "Drivers",
+  "package": "module",
+  "tags": "stepper driver 3dprinter"
+ },
+ {
+  "part": "TB6600",
+  "name": "Stepper driver, 4A",
+  "category": "Drivers",
+  "package": "enclosed",
+  "tags": "stepper driver cnc"
+ },
+ {
+  "part": "LM2596",
+  "name": "Adjustable buck converter module",
+  "category": "Power",
+  "package": "module",
+  "tags": "buck stepdown dcdc"
+ },
+ {
+  "part": "XL6009",
+  "name": "Adjustable boost converter module",
+  "category": "Power",
+  "package": "module",
+  "tags": "boost stepup dcdc"
+ },
+ {
+  "part": "MT3608",
+  "name": "2A boost converter module",
+  "category": "Power",
+  "package": "module",
+  "tags": "boost stepup dcdc"
+ },
+ {
+  "part": "TP4056",
+  "name": "1S Li-ion charger module",
+  "category": "Power",
+  "package": "with protection",
+  "tags": "lipo charger 18650 usb"
+ },
+ {
+  "part": "LM7805",
+  "name": "5V linear regulator, 1A",
+  "category": "Power",
+  "package": "TO-220",
+  "tags": "regulator 5v 7805"
+ },
+ {
+  "part": "LM7812",
+  "name": "12V linear regulator, 1A",
+  "category": "Power",
+  "package": "TO-220",
+  "tags": "regulator 12v"
+ },
+ {
+  "part": "LM317",
+  "name": "Adjustable linear regulator",
+  "category": "Power",
+  "package": "TO-220",
+  "tags": "regulator adjustable"
+ },
+ {
+  "part": "AMS1117-3.3",
+  "name": "3.3V LDO regulator",
+  "category": "Power",
+  "package": "SOT-223",
+  "tags": "regulator ldo 3v3"
+ },
+ {
+  "part": "IRF540N",
+  "name": "N-channel MOSFET, 100V 33A",
+  "category": "Discretes",
+  "package": "TO-220",
+  "tags": "mosfet nchannel power"
+ },
+ {
+  "part": "IRFZ44N",
+  "name": "N-channel MOSFET, 55V 49A",
+  "category": "Discretes",
+  "package": "TO-220",
+  "tags": "mosfet nchannel power"
+ },
+ {
+  "part": "IRF3205",
+  "name": "N-channel MOSFET, 55V 110A",
+  "category": "Discretes",
+  "package": "TO-220",
+  "tags": "mosfet nchannel power"
+ },
+ {
+  "part": "2N2222",
+  "name": "NPN general purpose transistor",
+  "category": "Discretes",
+  "package": "TO-92",
+  "tags": "transistor npn"
+ },
+ {
+  "part": "BC547",
+  "name": "NPN general purpose transistor",
+  "category": "Discretes",
+  "package": "TO-92",
+  "tags": "transistor npn"
+ },
+ {
+  "part": "BC557",
+  "name": "PNP general purpose transistor",
+  "category": "Discretes",
+  "package": "TO-92",
+  "tags": "transistor pnp"
+ },
+ {
+  "part": "TIP122",
+  "name": "NPN Darlington power transistor",
+  "category": "Discretes",
+  "package": "TO-220",
+  "tags": "transistor darlington"
+ },
+ {
+  "part": "BD139",
+  "name": "NPN medium power transistor",
+  "category": "Discretes",
+  "package": "TO-126",
+  "tags": "transistor npn"
+ },
+ {
+  "part": "1N4007",
+  "name": "Rectifier diode, 1000V 1A",
+  "category": "Discretes",
+  "package": "DO-41",
+  "tags": "diode rectifier"
+ },
+ {
+  "part": "1N4148",
+  "name": "Small signal switching diode",
+  "category": "Discretes",
+  "package": "DO-35",
+  "tags": "diode signal"
+ },
+ {
+  "part": "1N5819",
+  "name": "Schottky diode, 40V 1A",
+  "category": "Discretes",
+  "package": "DO-41",
+  "tags": "diode schottky"
+ },
+ {
+  "part": "1N5408",
+  "name": "Rectifier diode, 1000V 3A",
+  "category": "Discretes",
+  "package": "DO-201",
+  "tags": "diode rectifier"
+ },
+ {
+  "part": "KBL406",
+  "name": "Bridge rectifier, 4A 600V",
+  "category": "Discretes",
+  "package": "KBL",
+  "tags": "bridge rectifier"
+ },
+ {
+  "part": "1N4733A",
+  "name": "Zener diode, 5.1V 1W",
+  "category": "Discretes",
+  "package": "DO-41",
+  "tags": "zener diode"
+ },
+ {
+  "part": "NE555",
+  "name": "Timer IC",
+  "category": "ICs",
+  "package": "DIP-8",
+  "tags": "timer 555 oscillator"
+ },
+ {
+  "part": "LM358",
+  "name": "Dual op-amp",
+  "category": "ICs",
+  "package": "DIP-8",
+  "tags": "opamp dual"
+ },
+ {
+  "part": "LM324",
+  "name": "Quad op-amp",
+  "category": "ICs",
+  "package": "DIP-14",
+  "tags": "opamp quad"
+ },
+ {
+  "part": "LM393",
+  "name": "Dual comparator",
+  "category": "ICs",
+  "package": "DIP-8",
+  "tags": "comparator"
+ },
+ {
+  "part": "74HC595",
+  "name": "8-bit shift register, serial to parallel",
+  "category": "ICs",
+  "package": "DIP-16",
+  "tags": "shiftregister logic"
+ },
+ {
+  "part": "74HC165",
+  "name": "8-bit shift register, parallel to serial",
+  "category": "ICs",
+  "package": "DIP-16",
+  "tags": "shiftregister logic"
+ },
+ {
+  "part": "CD4017",
+  "name": "Decade counter / divider",
+  "category": "ICs",
+  "package": "DIP-16",
+  "tags": "counter cmos"
+ },
+ {
+  "part": "CD4047",
+  "name": "Astable / monostable multivibrator",
+  "category": "ICs",
+  "package": "DIP-14",
+  "tags": "multivibrator inverter"
+ },
+ {
+  "part": "MCP3008",
+  "name": "8-channel 10-bit SPI ADC",
+  "category": "ICs",
+  "package": "DIP-16",
+  "tags": "adc spi"
+ },
+ {
+  "part": "ADS1115",
+  "name": "16-bit I2C ADC module",
+  "category": "Modules",
+  "package": "module",
+  "tags": "adc i2c precision"
+ },
+ {
+  "part": "PCF8574",
+  "name": "8-bit I2C I/O expander",
+  "category": "ICs",
+  "package": "DIP-16",
+  "tags": "ioexpander i2c"
+ },
+ {
+  "part": "MAX232",
+  "name": "RS-232 line driver/receiver",
+  "category": "ICs",
+  "package": "DIP-16",
+  "tags": "rs232 serial"
+ },
+ {
+  "part": "PC817",
+  "name": "Optocoupler, transistor output",
+  "category": "ICs",
+  "package": "DIP-4",
+  "tags": "optocoupler isolation"
+ },
+ {
+  "part": "4N35",
+  "name": "Optocoupler, transistor output",
+  "category": "ICs",
+  "package": "DIP-6",
+  "tags": "optocoupler isolation"
+ },
+ {
+  "part": "MOC3021",
+  "name": "Triac driver optocoupler",
+  "category": "ICs",
+  "package": "DIP-6",
+  "tags": "optocoupler triac ac"
+ },
+ {
+  "part": "BT136",
+  "name": "Triac, 4A 600V",
+  "category": "Discretes",
+  "package": "TO-220",
+  "tags": "triac ac dimmer"
+ },
+ {
+  "part": "SG90",
+  "name": "9g micro servo",
+  "category": "Motors",
+  "package": "plastic gear",
+  "tags": "servo micro"
+ },
+ {
+  "part": "MG996R",
+  "name": "Metal gear servo, high torque",
+  "category": "Motors",
+  "package": "metal gear",
+  "tags": "servo torque"
+ },
+ {
+  "part": "28BYJ-48",
+  "name": "5V unipolar stepper with ULN2003 board",
+  "category": "Motors",
+  "package": "with driver",
+  "tags": "stepper 5v"
+ },
+ {
+  "part": "NEMA 17",
+  "name": "Bipolar stepper motor, 1.8°",
+  "category": "Motors",
+  "package": "42mm",
+  "tags": "stepper 3dprinter cnc"
+ },
+ {
+  "part": "Relay module 1ch 5V",
+  "name": "Single channel relay board, opto-isolated",
+  "category": "Modules",
+  "package": "5V",
+  "tags": "relay switch ac"
+ },
+ {
+  "part": "Relay module 4ch 5V",
+  "name": "Four channel relay board",
+  "category": "Modules",
+  "package": "5V",
+  "tags": "relay switch ac"
+ },
+ {
+  "part": "Buzzer (active) 5V",
+  "name": "Self-oscillating buzzer",
+  "category": "Passives",
+  "package": "12mm",
+  "tags": "buzzer beep sound"
+ },
+ {
+  "part": "Buzzer (passive) 5V",
+  "name": "Tone-driven buzzer",
+  "category": "Passives",
+  "package": "12mm",
+  "tags": "buzzer tone sound"
+ },
+ {
+  "part": "DC gear motor",
+  "name": "BO motor with gearbox",
+  "category": "Motors",
+  "package": "3-6V",
+  "tags": "motor robot bo"
+ },
+ {
+  "part": "Resistor kit 1/4W",
+  "name": "Assorted carbon film resistors",
+  "category": "Passives",
+  "package": "kit",
+  "tags": "resistor kit assortment"
+ },
+ {
+  "part": "Resistor 10k 1/4W",
+  "name": "Carbon film resistor",
+  "category": "Passives",
+  "package": "through-hole",
+  "tags": "resistor 10k"
+ },
+ {
+  "part": "Resistor 220R 1/4W",
+  "name": "Carbon film resistor",
+  "category": "Passives",
+  "package": "through-hole",
+  "tags": "resistor 220"
+ },
+ {
+  "part": "Resistor 1k 1/4W",
+  "name": "Carbon film resistor",
+  "category": "Passives",
+  "package": "through-hole",
+  "tags": "resistor 1k"
+ },
+ {
+  "part": "Capacitor 100nF",
+  "name": "Ceramic capacitor, 104",
+  "category": "Passives",
+  "package": "through-hole",
+  "tags": "capacitor ceramic decoupling"
+ },
+ {
+  "part": "Capacitor 10uF 25V",
+  "name": "Electrolytic capacitor",
+  "category": "Passives",
+  "package": "radial",
+  "tags": "capacitor electrolytic"
+ },
+ {
+  "part": "Capacitor 100uF 25V",
+  "name": "Electrolytic capacitor",
+  "category": "Passives",
+  "package": "radial",
+  "tags": "capacitor electrolytic"
+ },
+ {
+  "part": "Capacitor 1000uF 25V",
+  "name": "Electrolytic capacitor",
+  "category": "Passives",
+  "package": "radial",
+  "tags": "capacitor electrolytic filter"
+ },
+ {
+  "part": "Crystal 16MHz",
+  "name": "Quartz crystal oscillator",
+  "category": "Passives",
+  "package": "HC-49",
+  "tags": "crystal oscillator"
+ },
+ {
+  "part": "Crystal 32.768kHz",
+  "name": "Watch crystal",
+  "category": "Passives",
+  "package": "cylindrical",
+  "tags": "crystal rtc"
+ },
+ {
+  "part": "Potentiometer 10k",
+  "name": "Rotary potentiometer",
+  "category": "Passives",
+  "package": "B10K",
+  "tags": "pot variable resistor"
+ },
+ {
+  "part": "Trimpot 10k",
+  "name": "Multiturn trimmer potentiometer",
+  "category": "Passives",
+  "package": "3296W",
+  "tags": "trimpot preset"
+ },
+ {
+  "part": "LED 5mm",
+  "name": "Standard LED, assorted colours",
+  "category": "Passives",
+  "package": "5mm",
+  "tags": "led light"
+ },
+ {
+  "part": "RGB LED 5mm",
+  "name": "Common cathode RGB LED",
+  "category": "Passives",
+  "package": "5mm",
+  "tags": "led rgb"
+ },
+ {
+  "part": "WS2812B",
+  "name": "Addressable RGB LED strip",
+  "category": "Passives",
+  "package": "5050",
+  "tags": "neopixel addressable led"
+ },
+ {
+  "part": "Tactile push button",
+  "name": "6x6mm momentary switch",
+  "category": "Passives",
+  "package": "6x6",
+  "tags": "button switch tactile"
+ },
+ {
+  "part": "Breadboard 830",
+  "name": "Solderless breadboard, 830 points",
+  "category": "Prototyping",
+  "package": "MB-102",
+  "tags": "breadboard protoboard"
+ },
+ {
+  "part": "Breadboard 400",
+  "name": "Solderless breadboard, 400 points",
+  "category": "Prototyping",
+  "package": "half size",
+  "tags": "breadboard"
+ },
+ {
+  "part": "Jumper wires M-M",
+  "name": "40x male to male dupont wires",
+  "category": "Prototyping",
+  "package": "20cm",
+  "tags": "jumper dupont wires"
+ },
+ {
+  "part": "Jumper wires M-F",
+  "name": "40x male to female dupont wires",
+  "category": "Prototyping",
+  "package": "20cm",
+  "tags": "jumper dupont wires"
+ },
+ {
+  "part": "Vero/perf board",
+  "name": "Single sided prototyping board",
+  "category": "Prototyping",
+  "package": "assorted",
+  "tags": "perfboard veroboard"
+ },
+ {
+  "part": "Header pins 40p",
+  "name": "2.54mm male header strip",
+  "category": "Prototyping",
+  "package": "2.54mm",
+  "tags": "header pins berg"
+ },
+ {
+  "part": "IC socket DIP-28",
+  "name": "Machined DIP socket",
+  "category": "Prototyping",
+  "package": "DIP-28",
+  "tags": "socket dip"
+ },
+ {
+  "part": "18650 cell",
+  "name": "Li-ion rechargeable cell",
+  "category": "Power",
+  "package": "18650",
+  "tags": "battery lithium 18650"
+ },
+ {
+  "part": "18650 holder 2S",
+  "name": "Battery holder",
+  "category": "Power",
+  "package": "2 cell",
+  "tags": "battery holder"
+ },
+ {
+  "part": "9V battery clip",
+  "name": "Snap connector with leads",
+  "category": "Power",
+  "package": "snap",
+  "tags": "battery clip 9v"
+ }
+]

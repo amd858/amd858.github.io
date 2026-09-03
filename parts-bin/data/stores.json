@@ -1,0 +1,98 @@
+[
+ {
+  "id": "digilog",
+  "name": "Digilog.pk",
+  "country": "PK",
+  "currency": "PKR",
+  "url": "https://digilog.pk/?s={q}&post_type=product",
+  "enabled": true
+ },
+ {
+  "id": "circuitpk",
+  "name": "Circuit.pk",
+  "country": "PK",
+  "currency": "PKR",
+  "url": "https://circuit.pk/?s={q}&post_type=product",
+  "enabled": true
+ },
+ {
+  "id": "hallroad",
+  "name": "Hallroad.org",
+  "country": "PK",
+  "currency": "PKR",
+  "url": "https://hallroad.org/index.php?route=product/search&search={q}",
+  "enabled": true
+ },
+ {
+  "id": "daraz",
+  "name": "Daraz.pk",
+  "country": "PK",
+  "currency": "PKR",
+  "url": "https://www.daraz.pk/catalog/?q={q}",
+  "enabled": true
+ },
+ {
+  "id": "microtron",
+  "name": "Microtronics.pk",
+  "country": "PK",
+  "currency": "PKR",
+  "url": "https://microtronicspakistan.com/?s={q}&post_type=product",
+  "enabled": true
+ },
+ {
+  "id": "robu",
+  "name": "Robu.in",
+  "country": "IN",
+  "currency": "INR",
+  "url": "https://robu.in/?s={q}&post_type=product",
+  "enabled": true
+ },
+ {
+  "id": "w11stop",
+  "name": "W11Stop",
+  "country": "IN",
+  "currency": "INR",
+  "url": "https://www.w11stop.com/search?q={q}",
+  "enabled": false
+ },
+ {
+  "id": "lcsc",
+  "name": "LCSC",
+  "country": "CN",
+  "currency": "USD",
+  "url": "https://www.lcsc.com/search?q={q}",
+  "enabled": true
+ },
+ {
+  "id": "ali",
+  "name": "AliExpress",
+  "country": "CN",
+  "currency": "USD",
+  "url": "https://www.aliexpress.com/wholesale?SearchText={q}",
+  "enabled": true
+ },
+ {
+  "id": "octopart",
+  "name": "Octopart",
+  "country": "--",
+  "currency": "USD",
+  "url": "https://octopart.com/search?q={q}",
+  "enabled": true
+ },
+ {
+  "id": "mouser",
+  "name": "Mouser",
+  "country": "US",
+  "currency": "USD",
+  "url": "https://www.mouser.com/c/?q={q}",
+  "enabled": false
+ },
+ {
+  "id": "digikey",
+  "name": "DigiKey",
+  "country": "US",
+  "currency": "USD",
+  "url": "https://www.digikey.com/en/products/result?keywords={q}",
+  "enabled": false
+ }
+]

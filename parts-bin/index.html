@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Parts Bin — electronic component price finder</title>
+<meta name="description" content="Search an electronic component, compare what each store charges, and jump straight to the store listing.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --board:#e6dfcd;
+  --board-deep:#d5cbb2;
+  --hole:#b9ad90;
+  --ink:#1d2a27;
+  --ink-soft:#5a6763;
+  --ink-faint:#8b958f;
+  --solder:#0d6b5f;
+  --solder-dark:#084a41;
+  --solder-tint:#d9e8e4;
+  --copper:#a4571f;
+  --gold:#b8860b;
+  --gold-tint:#f5e9c8;
+  --card:#fbf8f0;
+  --line:#c4b99c;
+  --danger:#9c2f22;
+  --r:3px;
+  --pad:clamp(14px,4vw,28px);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background-color:var(--board);
+  background-image:radial-gradient(var(--hole) 1.1px, transparent 1.2px);
+  background-size:15px 15px;
+  background-position:7px 7px;
+  color:var(--ink);
+  font-family:'Archivo',system-ui,-apple-system,'Segoe UI',sans-serif;
+  font-size:16px;
+  line-height:1.5;
+  -webkit-text-size-adjust:100%;
+}
+.mono{font-family:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace}
+.wrap{max-width:1080px;margin:0 auto;padding:0 var(--pad) 100px}
+
+/* ---------- masthead ---------- */
+.masthead{padding:26px 0 8px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.mark{
+  font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:13px;letter-spacing:.02em;
+  background:var(--ink);color:var(--board);padding:4px 9px;border-radius:var(--r);
+}
+.masthead h1{font-size:19px;font-weight:600;margin:0;letter-spacing:-.01em}
+.masthead p{margin:0;color:var(--ink-soft);font-size:14px;flex-basis:100%;max-width:62ch}
+.mast-actions{margin-left:auto;display:flex;gap:6px}
+
+/* ---------- hero search ---------- */
+.console{
+  margin-top:20px;background:var(--card);border:1.5px solid var(--ink);
+  border-radius:var(--r);box-shadow:5px 5px 0 var(--board-deep);
+}
+.console-top{
+  display:flex;align-items:center;gap:10px;padding:9px 14px;
+  border-bottom:1px solid var(--line);background:var(--solder-tint);
+}
+.console-top span{font-size:12.5px;color:var(--solder-dark);font-weight:500}
+.lamp{width:8px;height:8px;border-radius:50%;background:var(--solder);flex:none}
+.searchrow{display:flex;align-items:center;gap:10px;padding:6px 14px}
+.searchrow .caret{color:var(--solder);font-size:22px;font-weight:600;line-height:1}
+#q{
+  flex:1;border:0;outline:0;background:transparent;padding:14px 0;
+  font-family:'IBM Plex Mono',monospace;font-size:clamp(19px,4.6vw,29px);
+  font-weight:500;color:var(--ink);letter-spacing:-.01em;min-width:0;
+}
+#q::placeholder{color:var(--ink-faint);font-weight:400}
+.clearbtn{border:0;background:transparent;color:var(--ink-faint);font-size:22px;cursor:pointer;padding:4px 6px;line-height:1}
+.clearbtn:hover{color:var(--danger)}
+.console-foot{
+  padding:10px 14px;border-top:1px dashed var(--line);
+  display:flex;gap:8px;flex-wrap:wrap;align-items:center;
+}
+.console-foot small{color:var(--ink-soft);font-size:12.5px;margin-right:2px}
+.chipsug{
+  border:1px solid var(--line);background:var(--board);color:var(--ink-soft);
+  font-family:'IBM Plex Mono',monospace;font-size:12px;padding:3px 8px;
+  border-radius:var(--r);cursor:pointer;
+}
+.chipsug:hover{border-color:var(--solder);color:var(--solder-dark);background:var(--solder-tint)}
+
+/* ---------- buttons ---------- */
+button{font-family:inherit}
+.btn{
+  border:1.5px solid var(--ink);background:var(--card);color:var(--ink);
+  padding:7px 13px;border-radius:var(--r);font-size:13.5px;font-weight:500;cursor:pointer;
+}
+.btn:hover{background:var(--solder-tint)}
+.btn-solid{background:var(--solder);border-color:var(--solder-dark);color:#fff}
+.btn-solid:hover{background:var(--solder-dark)}
+.btn-sm{padding:4px 9px;font-size:12.5px;border-width:1px}
+.btn-danger{color:var(--danger);border-color:var(--danger)}
+.btn-danger:hover{background:#f6e4e1}
+.btn-ghost{border-color:var(--line);background:transparent;color:var(--ink-soft)}
+.btn-ghost:hover{background:var(--card);color:var(--ink)}
+:focus-visible{outline:2.5px solid var(--copper);outline-offset:2px}
+
+/* ---------- banner ---------- */
+.banner{
+  margin-top:14px;padding:10px 14px;border-left:4px solid var(--gold);
+  background:var(--gold-tint);border-radius:0 var(--r) var(--r) 0;
+  font-size:13.5px;color:#5c4508;display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+}
+.banner strong{font-weight:600}
+
+/* ---------- filters ---------- */
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:22px 0 12px}
+.filters select,.filters input[type=number]{
+  font-family:inherit;font-size:13px;padding:6px 8px;border:1px solid var(--line);
+  background:var(--card);color:var(--ink);border-radius:var(--r);
+}
+.filters label{font-size:13px;color:var(--ink-soft);display:flex;align-items:center;gap:5px}
+.count{margin-left:auto;font-size:13px;color:var(--ink-soft)}
+.count b{font-family:'IBM Plex Mono',monospace;color:var(--ink);font-weight:600}
+
+/* ---------- live links ---------- */
+.live{
+  background:var(--card);border:1px solid var(--line);border-left:4px solid var(--copper);
+  border-radius:0 var(--r) var(--r) 0;padding:12px 14px;margin-bottom:18px;
+}
+.live h3{margin:0 0 3px;font-size:14px;font-weight:600}
+.live p{margin:0 0 9px;font-size:12.5px;color:var(--ink-soft);max-width:66ch}
+.livelinks{display:flex;gap:6px;flex-wrap:wrap}
+.livelinks a{
+  font-size:12.5px;text-decoration:none;color:var(--solder-dark);background:var(--solder-tint);
+  border:1px solid #b5cfc9;padding:4px 10px;border-radius:var(--r);
+}
+.livelinks a:hover{background:var(--solder);color:#fff;border-color:var(--solder-dark)}
+
+/* ---------- component strip ---------- */
+.strip{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+  margin-bottom:10px;overflow:hidden;
+}
+.strip-head{
+  display:flex;gap:12px;align-items:flex-start;padding:12px 14px;
+  border-bottom:1px solid #e7dfc9;flex-wrap:wrap;
+}
+.pn{
+  font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:15.5px;
+  color:var(--ink);letter-spacing:-.01em;word-break:break-word;
+}
+.strip-title{flex:1;min-width:200px}
+.strip-title .nm{font-size:13.5px;color:var(--ink-soft);margin-top:1px}
+.meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.tag{
+  font-size:11px;padding:2px 7px;border-radius:9px;background:var(--board-deep);
+  color:#4a4530;font-family:'IBM Plex Mono',monospace;
+}
+.best{
+  text-align:right;font-family:'IBM Plex Mono',monospace;flex:none;
+}
+.best .amt{font-size:19px;font-weight:600;color:var(--copper);white-space:nowrap}
+.best .lbl{font-size:11px;color:var(--ink-faint);font-family:'Archivo',sans-serif}
+.best .none{font-size:12.5px;color:var(--ink-faint);font-family:'Archivo',sans-serif}
+
+.prices{padding:4px 14px 12px}
+.prow{
+  display:flex;align-items:center;gap:10px;padding:7px 0;
+  border-bottom:1px dotted #ddd3ba;font-size:13.5px;flex-wrap:wrap;
+}
+.prow:last-child{border-bottom:0}
+.prow .store{flex:1;min-width:110px}
+.prow .store a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line)}
+.prow .store a:hover{color:var(--solder);border-color:var(--solder)}
+.prow .amt{font-family:'IBM Plex Mono',monospace;font-weight:600;min-width:96px;text-align:right}
+.prow .conv{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-faint);min-width:86px;text-align:right}
+.prow.is-best{background:var(--gold-tint);margin:0 -14px;padding:7px 14px;border-bottom:0}
+.prow.is-best .amt{color:var(--copper)}
+.dot{width:7px;height:7px;border-radius:50%;flex:none}
+.dot.in{background:var(--solder)}
+.dot.out{background:#b8433a}
+.dot.unk{background:#bdb49c}
+.when{font-size:11.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace}
+.rowacts{display:flex;gap:4px}
+.iconbtn{border:0;background:transparent;cursor:pointer;color:var(--ink-faint);font-size:13px;padding:2px 5px;border-radius:var(--r)}
+.iconbtn:hover{background:var(--board-deep);color:var(--ink)}
+.noprice{padding:2px 14px 10px;font-size:12.5px;color:var(--ink-faint)}
+.linkbtn{
+  border:0;background:transparent;padding:0;cursor:pointer;font-size:12.5px;
+  color:var(--solder);border-bottom:1px solid var(--solder);font-family:inherit;
+}
+.linkbtn:hover{color:var(--solder-dark)}
+.lead{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  font-size:13px;color:var(--ink-soft);margin:0 0 10px;
+}
+
+/* ---------- empty ---------- */
+.empty{
+  background:var(--card);border:1px dashed var(--line);border-radius:var(--r);
+  padding:34px 22px;text-align:center;
+}
+.empty h3{margin:0 0 6px;font-size:16px;font-weight:600}
+.empty p{margin:0 auto 14px;font-size:14px;color:var(--ink-soft);max-width:46ch}
+
+/* ---------- modal ---------- */
+.scrim{
+  position:fixed;inset:0;background:rgba(29,42,39,.55);display:none;
+  align-items:flex-start;justify-content:center;padding:20px;z-index:60;overflow-y:auto;
+}
+.scrim.open{display:flex}
+.modal{
+  background:var(--card);border:1.5px solid var(--ink);border-radius:var(--r);
+  width:100%;max-width:540px;margin:auto;box-shadow:7px 7px 0 rgba(0,0,0,.22);
+}
+.modal-head{
+  display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line);
+  background:var(--solder-tint);
+}
+.modal-head h2{margin:0;font-size:15px;font-weight:600}
+.modal-head .x{margin-left:auto;border:0;background:transparent;font-size:20px;cursor:pointer;color:var(--ink-soft);line-height:1}
+.modal-body{padding:16px;max-height:66vh;overflow-y:auto}
+.modal-foot{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.f{margin-bottom:13px}
+.f label{display:block;font-size:12.5px;color:var(--ink-soft);margin-bottom:4px}
+.f input,.f select,.f textarea{
+  width:100%;font-family:inherit;font-size:14px;padding:8px 10px;
+  border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:var(--r);
+}
+.f input.mono,.f textarea.mono{font-family:'IBM Plex Mono',monospace}
+.f textarea{min-height:78px;resize:vertical}
+.f .hint{font-size:11.5px;color:var(--ink-faint);margin-top:4px}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.err{color:var(--danger);font-size:13px;margin-bottom:10px;display:none}
+.err.show{display:block}
+
+/* ---------- manager lists ---------- */
+.mrow{
+  display:flex;gap:8px;align-items:center;padding:9px 0;border-bottom:1px dotted #ddd3ba;font-size:13.5px;
+}
+.mrow:last-child{border-bottom:0}
+.mrow .nmwrap{flex:1;min-width:0}
+.mrow .sub{font-size:11.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sw{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--ink-soft)}
+.pill{font-size:11px;font-family:'IBM Plex Mono',monospace;background:var(--board-deep);padding:2px 6px;border-radius:9px}
+.tabs{display:flex;gap:4px;margin-bottom:14px;border-bottom:1px solid var(--line)}
+.tabs button{
+  border:0;background:transparent;padding:8px 12px;font-size:13.5px;cursor:pointer;
+  color:var(--ink-soft);border-bottom:2.5px solid transparent;margin-bottom:-1px;
+}
+.tabs button.on{color:var(--ink);border-bottom-color:var(--solder);font-weight:600}
+.pane{display:none}
+.pane.on{display:block}
+.stat{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink-soft);margin-bottom:12px}
+
+/* ---------- toast ---------- */
+#toast{
+  position:fixed;left:50%;bottom:22px;transform:translateX(-50%);
+  background:var(--ink);color:var(--board);padding:10px 18px;border-radius:var(--r);
+  font-size:13.5px;z-index:90;opacity:0;pointer-events:none;transition:opacity .18s;
+  max-width:90vw;text-align:center;
+}
+#toast.show{opacity:1}
+
+/* ---------- footer ---------- */
+footer{
+  margin-top:38px;padding-top:16px;border-top:1px solid var(--line);
+  font-size:12.5px;color:var(--ink-soft);
+}
+footer a{color:var(--solder-dark)}
+
+@media (max-width:640px){
+  .best{text-align:left;width:100%}
+  .prow .conv{display:none}
+  .mast-actions{margin-left:0;flex-basis:100%}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <span class="mark">PARTS BIN</span>
+    <h1>Electronic component price finder</h1>
+    <div class="mast-actions">
+      <button class="btn btn-sm" id="btnManage">Manage data</button>
+      <button class="btn btn-sm" id="btnSettings">Settings</button>
+    </div>
+    <p>Type a part number. See what each store charges, which one is cheapest, and open the store listing directly.</p>
+  </header>
+
+  <section class="console">
+    <div class="console-top"><span class="lamp"></span><span>Search catalogue</span></div>
+    <div class="searchrow">
+      <span class="caret mono">&gt;</span>
+      <input id="q" class="mono" type="search" autocomplete="off" spellcheck="false"
+             placeholder="ESP32, 1N4007, DHT11…" aria-label="Search for a component">
+      <button class="clearbtn" id="btnClearQ" title="Clear search" aria-label="Clear search">&times;</button>
+    </div>
+    <div class="console-foot">
+      <small>Try:</small>
+      <button class="chipsug">ESP32</button>
+      <button class="chipsug">Arduino Nano</button>
+      <button class="chipsug">DHT11</button>
+      <button class="chipsug">L298N</button>
+      <button class="chipsug">NE555</button>
+      <button class="chipsug">SSD1306</button>
+    </div>
+  </section>
+
+  <div id="demoBanner" class="banner" hidden>
+    <span><strong>Sample prices are on.</strong> The numbers below are made up so the app is not empty. Replace them with real ones, or clear them.</span>
+    <button class="btn btn-sm" id="btnClearDemo">Clear sample prices</button>
+  </div>
+
+  <div class="filters">
+    <label>Category
+      <select id="fCat"><option value="">All</option></select>
+    </label>
+    <label>Store
+      <select id="fStore"><option value="">All</option></select>
+    </label>
+    <label>Sort
+      <select id="fSort">
+        <option value="relevance">Best match</option>
+        <option value="cheap">Cheapest first</option>
+        <option value="expensive">Priciest first</option>
+        <option value="az">Part number A–Z</option>
+      </select>
+    </label>
+    <label><input type="checkbox" id="fStock"> In stock only</label>
+    <label><input type="checkbox" id="fPriced"> Has a price</label>
+    <span class="count" id="count"></span>
+  </div>
+
+  <section class="live" id="liveBox" hidden>
+    <h3>Check live prices for “<span id="liveQ"></span>”</h3>
+    <p>Saved prices go stale. These open each store's own search page in a new tab, so you see today's price and stock.</p>
+    <div class="livelinks" id="liveLinks"></div>
+  </section>
+
+  <main id="results"></main>
+
+  <footer>
+    <p>Data lives in your browser. Export a backup from <b>Manage data</b> before clearing site data. Prices you save here are only as fresh as the day you saved them — always confirm on the store page before ordering.</p>
+  </footer>
+</div>
+
+<div class="scrim" id="scrim"><div class="modal" id="modal"></div></div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="app.js"></script>
+</body>
+</html>

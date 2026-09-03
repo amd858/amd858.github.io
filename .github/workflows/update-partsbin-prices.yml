@@ -1,0 +1,45 @@
+# Refreshes parts-bin/data/prices.json on a schedule and commits the result.
+#
+# This does nothing useful until you fill in the RULES table in
+# parts-bin/scripts/scrape.py. Until then it runs, finds no rules, and exits.
+#
+# It is disabled on a schedule by default — uncomment the `schedule` block
+# once your scraper actually works, so you are not running an empty job daily.
+
+name: Update Parts Bin prices
+
+on:
+  workflow_dispatch:        # lets you run it by hand from the Actions tab
+  # schedule:
+  #   - cron: '0 3 * * *'   # every day at 03:00 UTC
+
+permissions:
+  contents: write
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4
+
+      - name: Run the price updater
+        run: python parts-bin/scripts/scrape.py
+
+      - name: Commit any changes
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add parts-bin/data/prices.json
+          if git diff --staged --quiet; then
+            echo "Prices unchanged, nothing to commit."
+          else
+            git commit -m "Update Parts Bin prices ($(date -u +%Y-%m-%d))"
+            git push
+          fi
