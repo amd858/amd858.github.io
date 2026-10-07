@@ -202,7 +202,6 @@ html[data-theme="light"] .theme .sun{display:none}html[data-theme="light"] .them
     <div class="toolbar">
       <button class="btn" id="refreshBtn" type="button">Refresh</button>
       <button class="btn" id="csvBtn" type="button">Download CSV</button>
-      <button class="btn" id="adminBtn" type="button">Admin login</button>
     </div>
   </div>
 
@@ -649,7 +648,6 @@ html[data-theme="light"] .theme .sun{display:none}html[data-theme="light"] .them
 
     el("adminBar").classList.toggle("show", isAdmin);
     el("adminEmail").textContent = email;
-    el("adminBtn").style.display = isAdmin ? "none" : "";
     if (isAdmin) {
       el("loginPanel").classList.remove("show");
     }
@@ -664,10 +662,15 @@ html[data-theme="light"] .theme .sun{display:none}html[data-theme="light"] .them
     }
   }
 
-  el("adminBtn").addEventListener("click", function(){
-    el("loginPanel").classList.toggle("show");
-    if (el("loginPanel").classList.contains("show")) el("loginEmail").focus();
-  });
+  // There is no login button. Open the page as .../scale/#admin to show the login form.
+  function showLoginIfRequested(){
+    if (location.hash === "#admin" && !isAdmin) {
+      el("loginPanel").classList.add("show");
+      el("loginEmail").focus();
+    }
+  }
+  window.addEventListener("hashchange", showLoginIfRequested);
+  showLoginIfRequested();
 
   el("loginForm").addEventListener("submit", async function(event){
     event.preventDefault();
