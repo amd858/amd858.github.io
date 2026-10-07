@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark" data-profile="doc">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smart Scale — amd858</title>
+<meta name="description" content="Live weight readings from an ESP32-C3 + HX711 load cell scale, stored in Supabase.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --font-display:"IBM Plex Sans Condensed","Arial Narrow",sans-serif;
+  --font-body:"IBM Plex Sans",-apple-system,"Segoe UI",sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,"Cascadia Code",monospace;
+  --accent:var(--brass);
+}
+html[data-theme="dark"]{
+  color-scheme:dark;
+  --paper:#191C18; --ink:#E2E0D4; --dim:#A9AFA0;
+  --line:rgba(226,224,212,.16);
+  --green:#57B48C; --steel:#86AAC4; --copper:#D28B5A; --brass:#C9A94F; --slate:#9BA394;
+  --surface:#20241F; --surface-2:#262B22;
+}
+html[data-theme="light"]{
+  color-scheme:light;
+  --paper:#E9E7DD; --ink:#1B1D14; --dim:#4E5348;
+  --line:rgba(27,29,20,.16);
+  --green:#0E5A3E; --steel:#2E4A5E; --copper:#8F4A1E; --brass:#6F5417; --slate:#414A42;
+  --surface:#F5F3EA; --surface-2:#EFEDE1;
+}
+html[data-theme="dark"][data-profile="blueprint"]{
+  --paper:#12181F; --ink:#DCE6EC; --dim:#8CA0AC; --line:rgba(220,230,236,.16);
+  --green:#4FB3A6; --steel:#6FA3D8; --copper:#D9954F; --brass:#C9B15A; --slate:#7C8B96;
+  --surface:#171F27; --surface-2:#1C2530;
+}
+html[data-theme="light"][data-profile="blueprint"]{
+  --paper:#E8EEF3; --ink:#131A21; --dim:#47565F; --line:rgba(19,26,33,.16);
+  --green:#0F6E62; --steel:#245C91; --copper:#93551C; --brass:#7C6317; --slate:#3E4A52;
+  --surface:#F3F7FA; --surface-2:#EBF0F4;
+}
+html[data-theme="dark"][data-profile="ember"]{
+  --paper:#201613; --ink:#F1E2D3; --dim:#B69885; --line:rgba(241,226,211,.16);
+  --green:#7CA85E; --steel:#A68B76; --copper:#E2854A; --brass:#D6A83E; --slate:#AE8871;
+  --surface:#271C18; --surface-2:#2E221D;
+}
+html[data-theme="light"][data-profile="ember"]{
+  --paper:#F3E6D8; --ink:#211510; --dim:#6B5546; --line:rgba(33,21,16,.16);
+  --green:#3D6B2C; --steel:#6B5645; --copper:#9C4A1A; --brass:#8A6112; --slate:#6B5142;
+  --surface:#F8EFE3; --surface-2:#F1E5D6;
+}
+html[data-theme="dark"][data-profile="doc"]{
+  --paper:#12161C; --ink:#E8ECF1; --dim:#8B96A5; --line:#2A323E;
+  --green:#FF8552; --steel:#FF8552; --copper:#FF8552; --brass:#FF8552; --slate:#FF8552;
+  --surface:#1A2029; --surface-2:#212933;
+}
+html[data-theme="light"][data-profile="doc"]{
+  --paper:#EEF1F4; --ink:#1A2029; --dim:#5B6775; --line:#D7DCE2;
+  --green:#CC4A15; --steel:#CC4A15; --copper:#CC4A15; --brass:#CC4A15; --slate:#CC4A15;
+  --surface:#FFFFFF; --surface-2:#F5F7F9;
+}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:var(--paper);color:var(--ink);font-family:var(--font-body);
+  font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;padding:80px 24px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+body{transition:background-color .4s ease}
+.page{max-width:640px;margin:0 auto}
+.back{display:inline-block;font-family:var(--font-mono);font-size:.8rem;color:var(--dim);
+  text-decoration:none;border-bottom:1px solid var(--line);margin-bottom:2.2rem}
+.back:hover{color:var(--accent);border-color:var(--accent)}
+.eyebrow{display:block;font-family:var(--font-mono);font-size:.72rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--accent);margin-bottom:.9rem}
+h1{font-family:var(--font-display);font-weight:600;font-size:clamp(2.2rem,6vw,3rem);margin:0 0 .4rem}
+.tag{font-family:var(--font-mono);font-size:.85rem;color:var(--dim);margin:0 0 2rem}
+h2{font-family:var(--font-display);font-weight:600;font-size:1.15rem;margin:2.4rem 0 .9rem}
+
+/* latest reading */
+.latest{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:1.4rem 1.5rem}
+.latest .label{display:flex;align-items:center;gap:.5rem;font-family:var(--font-mono);font-size:.75rem;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--dim);flex:none}
+.dot.live{background:var(--accent);animation:pulse 2s ease-in-out infinite}
+.dot.error{background:#E5484D}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.weight{font-family:var(--font-display);font-weight:600;font-size:clamp(3rem,13vw,4.6rem);
+  line-height:1.05;margin:.5rem 0 .3rem;font-variant-numeric:tabular-nums}
+.weight .unit{font-size:.4em;color:var(--dim);margin-left:.2em;font-weight:500}
+.meta{font-size:.88rem;color:var(--dim)}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;margin-top:.7rem}
+.stat{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:.9rem 1rem}
+.stat .k{display:block;font-family:var(--font-mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+.stat .v{display:block;font-family:var(--font-display);font-weight:600;font-size:1.25rem;margin-top:.2rem;font-variant-numeric:tabular-nums}
+
+/* table */
+.table-wrap{border:1px solid var(--line);border-radius:10px;background:var(--surface);overflow:hidden}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th,td{padding:.6rem 1rem;text-align:left;border-bottom:1px solid var(--line)}
+th{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);font-weight:500;background:var(--surface-2)}
+tr:last-child td{border-bottom:none}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+td.dev{color:var(--dim);font-family:var(--font-mono);font-size:.8rem}
+.empty{padding:1.4rem 1rem;color:var(--dim);font-size:.9rem}
+
+.note{font-size:.85rem;color:var(--dim);margin-top:2.4rem;border-top:1px solid var(--line);padding-top:1.2rem}
+
+.theme{position:fixed;top:16px;right:16px;z-index:5;display:flex;align-items:center;gap:8px;background:none;border:1px solid var(--line);border-radius:100px;padding:6px 12px 6px 10px;cursor:pointer;color:var(--dim);font-family:var(--font-mono);font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;transition:all .2s}
+.theme:hover{color:var(--ink);border-color:var(--accent)}.theme svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;flex:none}.theme .moon{display:none}
+html[data-theme="light"] .theme .sun{display:none}html[data-theme="light"] .theme .moon{display:block}
+.profiles{position:fixed;top:54px;right:16px;z-index:5;display:flex;gap:7px}
+.profiles button{width:16px;height:16px;border-radius:50%;padding:0;cursor:pointer;
+  border:2px solid var(--line);background:conic-gradient(var(--sw-a) 0deg 120deg,var(--sw-b) 120deg 240deg,var(--sw-c) 240deg 360deg);
+  transition:border-color .3s,transform .15s}
+.profiles button:hover{transform:scale(1.18)}
+.profiles button[aria-pressed="true"]{border-color:var(--ink)}
+.profiles button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media(max-width:640px){.theme{top:10px;right:10px;padding:6px 10px}.theme .label{display:none}
+  .profiles{top:44px;right:10px;gap:6px}
+  body{padding:64px 16px}
+  th,td{padding:.55rem .7rem}
+  .stat .v{font-size:1.05rem}}
+</style>
+</head>
+<body>
+
+<button class="theme" id="themeBtn" type="button" aria-pressed="false" aria-label="Toggle theme">
+  <svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6"/></svg>
+  <svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.6A8.6 8.6 0 0 1 9.4 3.5a8.6 8.6 0 1 0 11.1 11.1z"/></svg>
+  <span class="label">Dark</span>
+</button>
+<div class="profiles" id="profilePicker" role="group" aria-label="Color profile">
+  <button type="button" data-profile="doc" aria-pressed="true" aria-label="Doc color profile" title="Doc"
+    style="--sw-a:#FF8552;--sw-b:#FF8552;--sw-c:#12161C"></button>
+  <button type="button" data-profile="field" aria-pressed="false" aria-label="Field color profile" title="Field"
+    style="--sw-a:#57B48C;--sw-b:#86AAC4;--sw-c:#D28B5A"></button>
+  <button type="button" data-profile="blueprint" aria-pressed="false" aria-label="Blueprint color profile" title="Blueprint"
+    style="--sw-a:#4FB3A6;--sw-b:#6FA3D8;--sw-c:#D9954F"></button>
+  <button type="button" data-profile="ember" aria-pressed="false" aria-label="Ember color profile" title="Ember"
+    style="--sw-a:#7CA85E;--sw-b:#A68B76;--sw-c:#E2854A"></button>
+</div>
+
+<main class="page">
+  <a class="back" href="../">&larr; amd858.github.io</a>
+
+  <span class="eyebrow">Live · ESP32-C3 + HX711 load cell</span>
+  <h1>Smart Scale</h1>
+  <p class="tag">Each time the weight settles, the scale sends it here over WiFi.</p>
+
+  <section class="latest" aria-live="polite">
+    <span class="label"><span class="dot" id="statusDot"></span><span id="statusText">Loading…</span></span>
+    <div class="weight" id="latestWeight">—</div>
+    <div class="meta" id="latestMeta">&nbsp;</div>
+  </section>
+
+  <div class="stats">
+    <div class="stat"><span class="k">Readings</span><span class="v" id="statCount">—</span></div>
+    <div class="stat"><span class="k">Heaviest</span><span class="v" id="statMax">—</span></div>
+    <div class="stat"><span class="k">Lightest</span><span class="v" id="statMin">—</span></div>
+  </div>
+
+  <h2>Recent readings</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Time</th><th>Device</th><th class="num">Weight</th></tr></thead>
+      <tbody id="rows"><tr><td colspan="3" class="empty">Loading…</td></tr></tbody>
+    </table>
+  </div>
+
+  <p class="note">Firmware: ESP32-C3 reading an HX711 load cell amplifier, with averaging, stability
+  detection and a NeoPixel status LED. Stable weights are written to a Supabase table; this page
+  reads the latest 50 and refreshes every 10 seconds.</p>
+</main>
+
+<script>
+(function(){
+  // Supabase publishable key: safe to be public. The database only lets it
+  // add readings and read the weight columns.
+  var SUPABASE_URL = "https://pxphdvyjbiqeozqrxles.supabase.co";
+  var SUPABASE_KEY = "sb_publishable_x08e2Fpkwmqu5d-FOZ0rWQ_IDUU0MoF";
+  var LIMIT = 50;
+  var REFRESH_MS = 10000;
+
+  var endpoint = SUPABASE_URL + "/rest/v1/scale_readings" +
+    "?select=id,created_at,device,weight,unit&order=created_at.desc&limit=" + LIMIT;
+
+  var el = function(id){ return document.getElementById(id); };
+  var latestRow = null;
+
+  function formatWeight(value){
+    return Number(value).toFixed(1);
+  }
+
+  function formatTime(iso){
+    return new Date(iso).toLocaleString(undefined, {
+      day:"numeric", month:"short", hour:"2-digit", minute:"2-digit", second:"2-digit"
+    });
+  }
+
+  function timeAgo(iso){
+    var seconds = Math.round((Date.now() - new Date(iso).getTime()) / 1000);
+    if (seconds < 60) return "just now";
+    var minutes = Math.round(seconds / 60);
+    if (minutes < 60) return minutes + " min ago";
+    var hours = Math.round(minutes / 60);
+    if (hours < 24) return hours + " h ago";
+    return Math.round(hours / 24) + " days ago";
+  }
+
+  function setStatus(kind, text){
+    el("statusDot").className = "dot " + kind;
+    el("statusText").textContent = text;
+  }
+
+  // Device names come from the database, so always insert them as text, never HTML
+  function cell(text, className){
+    var td = document.createElement("td");
+    td.textContent = text;
+    if (className) td.className = className;
+    return td;
+  }
+
+  function render(rows){
+    var tbody = el("rows");
+    tbody.innerHTML = "";
+
+    if (rows.length === 0){
+      var tr = document.createElement("tr");
+      var td = cell("No readings yet.", "empty");
+      td.colSpan = 3;
+      tr.appendChild(td);
+      tbody.appendChild(tr);
+      el("latestWeight").textContent = "—";
+      el("latestMeta").textContent = "Waiting for the scale to send its first weight.";
+      setStatus("", "No data");
+      return;
+    }
+
+    rows.forEach(function(r){
+      var tr = document.createElement("tr");
+      tr.appendChild(cell(formatTime(r.created_at)));
+      tr.appendChild(cell(r.device, "dev"));
+      tr.appendChild(cell(formatWeight(r.weight) + " " + r.unit, "num"));
+      tbody.appendChild(tr);
+    });
+
+    latestRow = rows[0];
+    var weightEl = el("latestWeight");
+    weightEl.textContent = formatWeight(latestRow.weight);
+    var unit = document.createElement("span");
+    unit.className = "unit";
+    unit.textContent = latestRow.unit;
+    weightEl.appendChild(unit);
+    updateLatestMeta();
+
+    var weights = rows.map(function(r){ return Number(r.weight); });
+    var unitText = " " + latestRow.unit;
+    el("statCount").textContent = rows.length;
+    el("statMax").textContent = formatWeight(Math.max.apply(null, weights)) + unitText;
+    el("statMin").textContent = formatWeight(Math.min.apply(null, weights)) + unitText;
+  }
+
+  function updateLatestMeta(){
+    if (!latestRow) return;
+    el("latestMeta").textContent =
+      latestRow.device + " · " + formatTime(latestRow.created_at) + " · " + timeAgo(latestRow.created_at);
+  }
+
+  function load(){
+    fetch(endpoint, { headers: { apikey: SUPABASE_KEY } })
+      .then(function(response){
+        if (!response.ok) throw new Error("HTTP " + response.status);
+        return response.json();
+      })
+      .then(function(rows){
+        render(rows);
+        if (rows.length > 0) setStatus("live", "Latest reading · live");
+      })
+      .catch(function(error){
+        setStatus("error", "Could not load readings (" + error.message + ")");
+      });
+  }
+
+  load();
+  setInterval(load, REFRESH_MS);
+  setInterval(updateLatestMeta, 15000);
+})();
+
+(function(){
+  var root=document.documentElement, btn=document.getElementById('themeBtn'), label=btn.querySelector('.label'), saved=null;
+  try{saved=localStorage.getItem('theme')}catch(e){}
+  apply(saved||'dark');
+  function apply(mode){
+    root.setAttribute('data-theme',mode);
+    btn.setAttribute('aria-pressed',mode==='light'?'true':'false');
+    label.textContent=mode==='dark'?'Day':'Night';
+    try{localStorage.setItem('theme',mode)}catch(e){}
+  }
+  btn.addEventListener('click',function(){
+    apply(root.getAttribute('data-theme')==='dark'?'light':'dark');
+  });
+})();
+(function(){
+  var root=document.documentElement, picker=document.getElementById('profilePicker');
+  if(!picker) return;
+  var buttons=[].slice.call(picker.querySelectorAll('button')), saved=null;
+  try{saved=localStorage.getItem('profile')}catch(e){}
+  apply(saved||'doc');
+  function apply(name){
+    root.setAttribute('data-profile',name);
+    buttons.forEach(function(b){b.setAttribute('aria-pressed',b.dataset.profile===name?'true':'false')});
+    try{localStorage.setItem('profile',name)}catch(e){}
+  }
+  buttons.forEach(function(b){
+    b.addEventListener('click',function(){apply(b.dataset.profile)});
+  });
+})();
+</script>
+</body>
+</html>
