@@ -652,8 +652,12 @@ html[data-theme="light"] .theme .sun{display:none}html[data-theme="light"] .them
       el("loginPanel").classList.remove("show");
     }
 
+    // Only the admin login is useful here. Any other saved login is removed,
+    // otherwise the page would read the table as that user and show nothing.
     if (session && !isAdmin) {
-      showMessage("Signed in as " + email + ", but this account has no admin rights.", "error");
+      setTimeout(function(){
+        clearSavedLogin("Removed a saved login that is not the admin (" + email + ").");
+      }, 0);
     }
 
     if (wasAdmin !== isAdmin) {
@@ -693,14 +697,39 @@ html[data-theme="light"] .theme .sun{display:none}html[data-theme="light"] .them
     }
   });
 
+  // Removes the login saved in this browser (works even if the user was deleted in Supabase)
+  async function clearSavedLogin(text){
+    await db.auth.signOut({ scope: "local" });
+    showMessage(text, "ok");
+  }
+
+  // The saved login is only checked locally by default. Ask Supabase if the user
+  // still exists; if not (deleted user, expired login), clear it.
+  async function checkSavedLogin(){
+    var saved = await db.auth.getSession();
+    if (!saved.data.session) return;
+
+    var check = await db.auth.getUser();
+    if (check.error || !check.data.user) {
+      await clearSavedLogin("Your old login was no longer valid and has been cleared.");
+    }
+  }
+
   el("logoutBtn").addEventListener("click", async function(){
-    await db.auth.signOut();
-    showMessage("Signed out.", "ok");
+    await clearSavedLogin("Signed out.");
   });
 
   db.auth.onAuthStateChange(function(event, session){
     applySession(session);
   });
+
+  // Open the page as .../scale/#logout to clear any saved login by hand
+  if (location.hash === "#logout") {
+    clearSavedLogin("Saved login cleared.");
+    history.replaceState(null, "", location.pathname);
+  } else {
+    checkSavedLogin();
+  }
 
   // ---------------- Buttons ----------------
   el("refreshBtn").addEventListener("click", function(){
