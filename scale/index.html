@@ -64,7 +64,7 @@ body{margin:0;min-height:100vh;background:var(--paper);color:var(--ink);font-fam
   font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;padding:80px 24px}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 body{transition:background-color .4s ease}
-.page{max-width:640px;margin:0 auto}
+.page{max-width:860px;margin:0 auto}
 .back{display:inline-block;font-family:var(--font-mono);font-size:.8rem;color:var(--dim);
   text-decoration:none;border-bottom:1px solid var(--line);margin-bottom:2.2rem}
 .back:hover{color:var(--accent);border-color:var(--accent)}
@@ -72,9 +72,10 @@ body{transition:background-color .4s ease}
   text-transform:uppercase;color:var(--accent);margin-bottom:.9rem}
 h1{font-family:var(--font-display);font-weight:600;font-size:clamp(2.2rem,6vw,3rem);margin:0 0 .4rem}
 .tag{font-family:var(--font-mono);font-size:.85rem;color:var(--dim);margin:0 0 2rem}
-h2{font-family:var(--font-display);font-weight:600;font-size:1.15rem;margin:2.4rem 0 .9rem}
+h2{font-family:var(--font-display);font-weight:600;font-size:1.15rem;margin:0}
 
 /* latest reading */
+.top{display:grid;grid-template-columns:1.4fr 1fr;gap:.7rem}
 .latest{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:1.4rem 1.5rem}
 .latest .label{display:flex;align-items:center;gap:.5rem;font-family:var(--font-mono);font-size:.75rem;
   letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
@@ -82,26 +83,61 @@ h2{font-family:var(--font-display);font-weight:600;font-size:1.15rem;margin:2.4r
 .dot.live{background:var(--accent);animation:pulse 2s ease-in-out infinite}
 .dot.error{background:#E5484D}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
-.weight{font-family:var(--font-display);font-weight:600;font-size:clamp(3rem,13vw,4.6rem);
+.weight{font-family:var(--font-display);font-weight:600;font-size:clamp(3rem,11vw,4.4rem);
   line-height:1.05;margin:.5rem 0 .3rem;font-variant-numeric:tabular-nums}
 .weight .unit{font-size:.4em;color:var(--dim);margin-left:.2em;font-weight:500}
 .meta{font-size:.88rem;color:var(--dim)}
+.stats{display:grid;grid-template-rows:repeat(3,1fr);gap:.7rem}
+.stat{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:.7rem 1rem;
+  display:flex;justify-content:space-between;align-items:baseline;gap:1rem}
+.stat .k{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+.stat .v{font-family:var(--font-display);font-weight:600;font-size:1.2rem;font-variant-numeric:tabular-nums}
 
-/* stats */
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;margin-top:.7rem}
-.stat{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:.9rem 1rem}
-.stat .k{display:block;font-family:var(--font-mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
-.stat .v{display:block;font-family:var(--font-display);font-weight:600;font-size:1.25rem;margin-top:.2rem;font-variant-numeric:tabular-nums}
+/* buttons and inputs */
+.btn{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.04em;padding:.5rem .85rem;border-radius:7px;
+  border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;white-space:nowrap}
+.btn:hover{border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:default;border-color:var(--line)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--paper);font-weight:600}
+.btn.danger{color:#E5484D;border-color:rgba(229,72,77,.45)}
+.btn.danger:hover:not(:disabled){background:rgba(229,72,77,.12);border-color:#E5484D}
+.btn.small{padding:.25rem .55rem;font-size:.72rem}
+input[type=email],input[type=password]{font:inherit;font-size:.92rem;padding:.5rem .7rem;border-radius:7px;
+  border:1px solid var(--line);background:var(--paper);color:var(--ink);min-width:0;flex:1 1 180px}
+input:focus-visible,.btn:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);cursor:pointer;margin:0;vertical-align:middle}
+select{font-family:var(--font-mono);font-size:.78rem;padding:.4rem .5rem;border-radius:7px;border:1px solid var(--line);
+  background:var(--surface);color:var(--ink)}
 
-/* table */
-.table-wrap{border:1px solid var(--line);border-radius:10px;background:var(--surface);overflow:hidden}
+/* table section */
+.section-head{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin:2.6rem 0 .9rem}
+.toolbar{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+.admin-bar{display:none;align-items:center;justify-content:space-between;gap:.8rem;flex-wrap:wrap;
+  border:1px solid var(--accent);border-radius:10px;padding:.7rem 1rem;margin-bottom:.7rem;background:var(--surface)}
+.admin-bar.show{display:flex}
+.admin-bar .who{font-size:.85rem;color:var(--dim)}
+.admin-bar .who b{color:var(--ink);font-weight:500}
+.login{display:none;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:1rem;margin-bottom:.7rem}
+.login.show{display:block}
+.login form{display:flex;gap:.5rem;flex-wrap:wrap}
+.login p{margin:.2rem 0 .7rem;font-size:.85rem;color:var(--dim)}
+.message{min-height:1.4em;font-size:.85rem;color:var(--dim);margin:.2rem 0 .5rem}
+.message.error{color:#E5484D}
+.message.ok{color:var(--accent)}
+.table-wrap{border:1px solid var(--line);border-radius:10px;background:var(--surface);overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:.9rem}
-th,td{padding:.6rem 1rem;text-align:left;border-bottom:1px solid var(--line)}
+th,td{padding:.55rem .9rem;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
 th{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);font-weight:500;background:var(--surface-2)}
 tr:last-child td{border-bottom:none}
+tr.selected td{background:var(--surface-2)}
 td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
-td.dev{color:var(--dim);font-family:var(--font-mono);font-size:.8rem}
-.empty{padding:1.4rem 1rem;color:var(--dim);font-size:.9rem}
+td.mono{color:var(--dim);font-family:var(--font-mono);font-size:.8rem}
+td.check,th.check{width:1%;padding-right:0}
+td.action{width:1%;text-align:right}
+.empty{padding:1.4rem 1rem;color:var(--dim);font-size:.9rem;white-space:normal}
+.pager{display:flex;align-items:center;justify-content:space-between;gap:.8rem;flex-wrap:wrap;margin-top:.7rem;
+  font-size:.85rem;color:var(--dim)}
+.pager .nav{display:flex;gap:.4rem;align-items:center}
 
 .note{font-size:.85rem;color:var(--dim);margin-top:2.4rem;border-top:1px solid var(--line);padding-top:1.2rem}
 
@@ -118,9 +154,10 @@ html[data-theme="light"] .theme .sun{display:none}html[data-theme="light"] .them
 @media(max-width:640px){.theme{top:10px;right:10px;padding:6px 10px}.theme .label{display:none}
   .profiles{top:44px;right:10px;gap:6px}
   body{padding:64px 16px}
-  th,td{padding:.55rem .7rem}
-  .stat .v{font-size:1.05rem}}
+  .top{grid-template-columns:1fr}
+  th,td{padding:.5rem .65rem}}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -147,53 +184,129 @@ html[data-theme="light"] .theme .sun{display:none}html[data-theme="light"] .them
   <h1>Smart Scale</h1>
   <p class="tag">Each time the weight settles, the scale sends it here over WiFi.</p>
 
-  <section class="latest" aria-live="polite">
-    <span class="label"><span class="dot" id="statusDot"></span><span id="statusText">Loading…</span></span>
-    <div class="weight" id="latestWeight">—</div>
-    <div class="meta" id="latestMeta">&nbsp;</div>
-  </section>
-
-  <div class="stats">
-    <div class="stat"><span class="k">Readings</span><span class="v" id="statCount">—</span></div>
-    <div class="stat"><span class="k">Heaviest</span><span class="v" id="statMax">—</span></div>
-    <div class="stat"><span class="k">Lightest</span><span class="v" id="statMin">—</span></div>
+  <div class="top">
+    <section class="latest" aria-live="polite">
+      <span class="label"><span class="dot" id="statusDot"></span><span id="statusText">Loading…</span></span>
+      <div class="weight" id="latestWeight">—</div>
+      <div class="meta" id="latestMeta">&nbsp;</div>
+    </section>
+    <div class="stats">
+      <div class="stat"><span class="k">Readings</span><span class="v" id="statCount">—</span></div>
+      <div class="stat"><span class="k">Heaviest</span><span class="v" id="statMax">—</span></div>
+      <div class="stat"><span class="k">Lightest</span><span class="v" id="statMin">—</span></div>
+    </div>
   </div>
 
-  <h2>Recent readings</h2>
+  <div class="section-head">
+    <h2>All readings</h2>
+    <div class="toolbar">
+      <button class="btn" id="refreshBtn" type="button">Refresh</button>
+      <button class="btn" id="csvBtn" type="button">Download CSV</button>
+      <button class="btn" id="adminBtn" type="button">Admin login</button>
+    </div>
+  </div>
+
+  <div class="login" id="loginPanel">
+    <p>Admin only. Signing in shows every column and lets you delete readings.</p>
+    <form id="loginForm">
+      <input type="email" id="loginEmail" placeholder="Email" autocomplete="username" required>
+      <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password" required>
+      <button class="btn primary" type="submit" id="loginSubmit">Sign in</button>
+    </form>
+  </div>
+
+  <div class="admin-bar" id="adminBar">
+    <span class="who">Admin: <b id="adminEmail"></b></span>
+    <div class="toolbar">
+      <button class="btn danger" id="deleteSelectedBtn" type="button" disabled>Delete selected</button>
+      <button class="btn" id="logoutBtn" type="button">Sign out</button>
+    </div>
+  </div>
+
+  <div class="message" id="message" role="status"></div>
+
   <div class="table-wrap">
     <table>
-      <thead><tr><th>Time</th><th>Device</th><th class="num">Weight</th></tr></thead>
-      <tbody id="rows"><tr><td colspan="3" class="empty">Loading…</td></tr></tbody>
+      <thead><tr id="headRow"></tr></thead>
+      <tbody id="rows"><tr><td class="empty">Loading…</td></tr></tbody>
     </table>
+  </div>
+
+  <div class="pager">
+    <span id="pageInfo"></span>
+    <div class="nav">
+      <label for="pageSize">Show</label>
+      <select id="pageSize">
+        <option value="25">25</option>
+        <option value="50" selected>50</option>
+        <option value="100">100</option>
+        <option value="500">500</option>
+        <option value="0">All</option>
+      </select>
+      <button class="btn small" id="prevBtn" type="button">‹ Prev</button>
+      <button class="btn small" id="nextBtn" type="button">Next ›</button>
+    </div>
   </div>
 
   <p class="note">Firmware: ESP32-C3 reading an HX711 load cell amplifier, with averaging, stability
   detection and a NeoPixel status LED. Stable weights are written to a Supabase table; this page
-  reads the latest 50 and refreshes every 10 seconds.</p>
+  shows all of them and refreshes every 10 seconds.</p>
 </main>
 
 <script>
 (function(){
-  // Supabase publishable key: safe to be public. The database only lets it
-  // add readings and read the weight columns.
+  // ---------------- Settings ----------------
+  // The publishable key is meant to be public. The database decides what it may do:
+  // visitors can only read the weight columns; deleting needs the admin login.
   var SUPABASE_URL = "https://pxphdvyjbiqeozqrxles.supabase.co";
   var SUPABASE_KEY = "sb_publishable_x08e2Fpkwmqu5d-FOZ0rWQ_IDUU0MoF";
-  var LIMIT = 50;
-  var REFRESH_MS = 10000;
+  var ADMIN_EMAIL  = "amd858@gmail.com";
+  var TABLE        = "scale_readings";
+  var REFRESH_MS   = 10000;
+  var BATCH_SIZE   = 1000;   // Supabase returns at most 1000 rows per request
 
-  var endpoint = SUPABASE_URL + "/rest/v1/scale_readings" +
-    "?select=id,created_at,device,weight,unit&order=created_at.desc&limit=" + LIMIT;
+  var db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ---------------- Columns ----------------
+  var PUBLIC_COLUMNS = [
+    { key: "created_at", label: "Time",   format: formatTime },
+    { key: "device",     label: "Device", className: "mono" },
+    { key: "weight",     label: "Weight", className: "num", format: formatWeightWithUnit }
+  ];
+  var ADMIN_COLUMNS = [
+    { key: "id",                 label: "ID",         className: "mono" },
+    { key: "created_at",         label: "Time",       format: formatTime },
+    { key: "device",             label: "Device",     className: "mono" },
+    { key: "weight",             label: "Weight",     className: "num", format: formatWeightWithUnit },
+    { key: "raw",                label: "Raw",        className: "num" },
+    { key: "calibration_factor", label: "Cal factor", className: "num" }
+  ];
+
+  // ---------------- State ----------------
+  var rows       = [];
+  var isAdmin    = false;
+  var page       = 0;
+  var pageSize   = 50;
+  var selected   = new Set();
+  var loading    = false;
+  var reloadAfter = false;
+  var latestRow  = null;
 
   var el = function(id){ return document.getElementById(id); };
-  var latestRow = null;
 
+  // ---------------- Formatting ----------------
   function formatWeight(value){
     return Number(value).toFixed(1);
   }
 
+  function formatWeightWithUnit(value, row){
+    return formatWeight(value) + " " + row.unit;
+  }
+
   function formatTime(iso){
     return new Date(iso).toLocaleString(undefined, {
-      day:"numeric", month:"short", hour:"2-digit", minute:"2-digit", second:"2-digit"
+      year: "numeric", month: "short", day: "numeric",
+      hour: "2-digit", minute: "2-digit", second: "2-digit"
     });
   }
 
@@ -207,42 +320,83 @@ html[data-theme="light"] .theme .sun{display:none}html[data-theme="light"] .them
     return Math.round(hours / 24) + " days ago";
   }
 
+  function columns(){
+    if (isAdmin) {
+      return ADMIN_COLUMNS;
+    } else {
+      return PUBLIC_COLUMNS;
+    }
+  }
+
   function setStatus(kind, text){
     el("statusDot").className = "dot " + kind;
     el("statusText").textContent = text;
   }
 
-  // Device names come from the database, so always insert them as text, never HTML
-  function cell(text, className){
-    var td = document.createElement("td");
-    td.textContent = text;
-    if (className) td.className = className;
-    return td;
+  function showMessage(text, kind){
+    var box = el("message");
+    box.textContent = text;
+    box.className = "message " + (kind || "");
   }
 
-  function render(rows){
-    var tbody = el("rows");
-    tbody.innerHTML = "";
+  // ---------------- Loading data ----------------
+  async function fetchAllRows(){
+    var columnList = columns().map(function(c){ return c.key; });
+    if (columnList.indexOf("unit") < 0) columnList.push("unit");
+    if (columnList.indexOf("id") < 0) columnList.push("id");
 
-    if (rows.length === 0){
-      var tr = document.createElement("tr");
-      var td = cell("No readings yet.", "empty");
-      td.colSpan = 3;
-      tr.appendChild(td);
-      tbody.appendChild(tr);
+    var all = [];
+    for (var from = 0; ; from += BATCH_SIZE) {
+      var result = await db.from(TABLE)
+        .select(columnList.join(","))
+        .order("created_at", { ascending: false })
+        .range(from, from + BATCH_SIZE - 1);
+
+      if (result.error) throw result.error;
+      all = all.concat(result.data);
+      if (result.data.length < BATCH_SIZE) break;
+    }
+    return all;
+  }
+
+  async function load(){
+    if (loading) {
+      reloadAfter = true;   // e.g. admin signed in while loading: load again with the new columns
+      return;
+    }
+    loading = true;
+    reloadAfter = false;
+    try {
+      rows = await fetchAllRows();
+
+      // Forget selections of rows that no longer exist
+      var ids = new Set(rows.map(function(r){ return r.id; }));
+      selected.forEach(function(id){ if (!ids.has(id)) selected.delete(id); });
+
+      renderSummary();
+      renderTable();
+      if (rows.length > 0) setStatus("live", "Latest reading · live");
+    } catch (error) {
+      setStatus("error", "Could not load readings");
+      showMessage("Load failed: " + error.message, "error");
+    } finally {
+      loading = false;
+      if (reloadAfter) load();
+    }
+  }
+
+  // ---------------- Rendering ----------------
+  function renderSummary(){
+    if (rows.length === 0) {
+      latestRow = null;
       el("latestWeight").textContent = "—";
       el("latestMeta").textContent = "Waiting for the scale to send its first weight.";
+      el("statCount").textContent = "0";
+      el("statMax").textContent = "—";
+      el("statMin").textContent = "—";
       setStatus("", "No data");
       return;
     }
-
-    rows.forEach(function(r){
-      var tr = document.createElement("tr");
-      tr.appendChild(cell(formatTime(r.created_at)));
-      tr.appendChild(cell(r.device, "dev"));
-      tr.appendChild(cell(formatWeight(r.weight) + " " + r.unit, "num"));
-      tbody.appendChild(tr);
-    });
 
     latestRow = rows[0];
     var weightEl = el("latestWeight");
@@ -266,26 +420,309 @@ html[data-theme="light"] .theme .sun{display:none}html[data-theme="light"] .them
       latestRow.device + " · " + formatTime(latestRow.created_at) + " · " + timeAgo(latestRow.created_at);
   }
 
-  function load(){
-    fetch(endpoint, { headers: { apikey: SUPABASE_KEY } })
-      .then(function(response){
-        if (!response.ok) throw new Error("HTTP " + response.status);
-        return response.json();
-      })
-      .then(function(rows){
-        render(rows);
-        if (rows.length > 0) setStatus("live", "Latest reading · live");
-      })
-      .catch(function(error){
-        setStatus("error", "Could not load readings (" + error.message + ")");
-      });
+  function visibleRows(){
+    if (pageSize === 0) return rows;
+    return rows.slice(page * pageSize, (page + 1) * pageSize);
   }
 
+  function pageCount(){
+    if (pageSize === 0) return 1;
+    return Math.max(1, Math.ceil(rows.length / pageSize));
+  }
+
+  // Text from the database is always inserted as text, never as HTML
+  function textCell(text, className){
+    var td = document.createElement("td");
+    td.textContent = text;
+    if (className) td.className = className;
+    return td;
+  }
+
+  function renderHeader(){
+    var head = el("headRow");
+    head.innerHTML = "";
+
+    if (isAdmin) {
+      var th = document.createElement("th");
+      th.className = "check";
+      var all = document.createElement("input");
+      all.type = "checkbox";
+      all.id = "selectPage";
+      all.setAttribute("aria-label", "Select all rows on this page");
+      all.addEventListener("change", function(){
+        visibleRows().forEach(function(r){
+          if (all.checked) {
+            selected.add(r.id);
+          } else {
+            selected.delete(r.id);
+          }
+        });
+        renderTable();
+      });
+      th.appendChild(all);
+      head.appendChild(th);
+    }
+
+    columns().forEach(function(c){
+      var th = document.createElement("th");
+      th.textContent = c.label;
+      if (c.className === "num") th.className = "num";
+      head.appendChild(th);
+    });
+
+    if (isAdmin) {
+      head.appendChild(document.createElement("th"));
+    }
+  }
+
+  function renderTable(){
+    if (page > pageCount() - 1) page = pageCount() - 1;
+
+    renderHeader();
+    var tbody = el("rows");
+    tbody.innerHTML = "";
+    var cols = columns();
+    var shown = visibleRows();
+
+    if (shown.length === 0) {
+      var tr = document.createElement("tr");
+      var td = textCell("No readings yet.", "empty");
+      td.colSpan = cols.length + (isAdmin ? 2 : 0);
+      tr.appendChild(td);
+      tbody.appendChild(tr);
+    }
+
+    shown.forEach(function(r){
+      var tr = document.createElement("tr");
+      if (selected.has(r.id)) tr.className = "selected";
+
+      if (isAdmin) {
+        var checkCell = document.createElement("td");
+        checkCell.className = "check";
+        var box = document.createElement("input");
+        box.type = "checkbox";
+        box.checked = selected.has(r.id);
+        box.setAttribute("aria-label", "Select reading " + r.id);
+        box.addEventListener("change", function(){
+          if (box.checked) {
+            selected.add(r.id);
+          } else {
+            selected.delete(r.id);
+          }
+          renderTable();
+        });
+        checkCell.appendChild(box);
+        tr.appendChild(checkCell);
+      }
+
+      cols.forEach(function(c){
+        var value = r[c.key];
+        var text;
+        if (value === null || value === undefined) {
+          text = "";
+        } else if (c.format) {
+          text = c.format(value, r);
+        } else {
+          text = String(value);
+        }
+        tr.appendChild(textCell(text, c.className));
+      });
+
+      if (isAdmin) {
+        var actionCell = document.createElement("td");
+        actionCell.className = "action";
+        var del = document.createElement("button");
+        del.type = "button";
+        del.className = "btn small danger";
+        del.textContent = "Delete";
+        del.addEventListener("click", function(){
+          deleteRows([r.id]);
+        });
+        actionCell.appendChild(del);
+        tr.appendChild(actionCell);
+      }
+
+      tbody.appendChild(tr);
+    });
+
+    // header checkbox reflects the current page
+    var pageBox = el("selectPage");
+    if (pageBox) {
+      pageBox.checked = shown.length > 0 && shown.every(function(r){ return selected.has(r.id); });
+    }
+
+    // pager
+    if (rows.length === 0) {
+      el("pageInfo").textContent = "";
+    } else if (pageSize === 0) {
+      el("pageInfo").textContent = "All " + rows.length + " readings";
+    } else {
+      var first = page * pageSize + 1;
+      var last = Math.min(rows.length, (page + 1) * pageSize);
+      el("pageInfo").textContent = first + "–" + last + " of " + rows.length;
+    }
+    el("prevBtn").disabled = (page === 0);
+    el("nextBtn").disabled = (page >= pageCount() - 1);
+
+    var deleteBtn = el("deleteSelectedBtn");
+    deleteBtn.disabled = (selected.size === 0);
+    deleteBtn.textContent = "Delete selected (" + selected.size + ")";
+  }
+
+  // ---------------- Delete (admin) ----------------
+  async function deleteRows(ids){
+    var question;
+    if (ids.length === 1) {
+      question = "Delete reading " + ids[0] + "? This can not be undone.";
+    } else {
+      question = "Delete " + ids.length + " readings? This can not be undone.";
+    }
+    if (!window.confirm(question)) return;
+
+    showMessage("Deleting…");
+    var result = await db.from(TABLE).delete().in("id", ids).select("id");
+
+    if (result.error) {
+      showMessage("Delete failed: " + result.error.message, "error");
+      return;
+    }
+    if (result.data.length === 0) {
+      showMessage("Nothing was deleted. Are you still signed in as admin?", "error");
+      return;
+    }
+
+    ids.forEach(function(id){ selected.delete(id); });
+    showMessage("Deleted " + result.data.length + " reading(s).", "ok");
+    await load();
+  }
+
+  // ---------------- CSV download ----------------
+  function csvValue(value, isText){
+    if (value === null || value === undefined) return "";
+    var text = String(value);
+    // stop spreadsheet programs from running text that starts like a formula
+    if (isText && /^[=+@\t\r]/.test(text)) text = "'" + text;
+    if (/[",\n\r]/.test(text)) text = '"' + text.replace(/"/g, '""') + '"';
+    return text;
+  }
+
+  function downloadCsv(){
+    if (rows.length === 0) {
+      showMessage("There is nothing to download yet.", "error");
+      return;
+    }
+
+    var keys = columns().map(function(c){ return c.key; });
+    if (keys.indexOf("unit") < 0) keys.splice(keys.indexOf("weight") + 1, 0, "unit");
+    var textKeys = ["device", "unit"];
+
+    var lines = [keys.concat(["local_time"]).join(",")];
+    rows.forEach(function(r){
+      var values = keys.map(function(k){ return csvValue(r[k], textKeys.indexOf(k) >= 0); });
+      values.push(csvValue(formatTime(r.created_at), false));
+      lines.push(values.join(","));
+    });
+
+    var blob = new Blob(["﻿" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+    var link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "scale_readings_" + new Date().toISOString().slice(0, 10) + ".csv";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(function(){ URL.revokeObjectURL(link.href); }, 1000);
+    showMessage("Downloaded " + rows.length + " readings.", "ok");
+  }
+
+  // ---------------- Admin login ----------------
+  function applySession(session){
+    var email = "";
+    if (session && session.user && session.user.email) {
+      email = session.user.email.toLowerCase();
+    }
+
+    var wasAdmin = isAdmin;
+    isAdmin = (email === ADMIN_EMAIL);
+
+    el("adminBar").classList.toggle("show", isAdmin);
+    el("adminEmail").textContent = email;
+    el("adminBtn").style.display = isAdmin ? "none" : "";
+    if (isAdmin) {
+      el("loginPanel").classList.remove("show");
+    }
+
+    if (session && !isAdmin) {
+      showMessage("Signed in as " + email + ", but this account has no admin rights.", "error");
+    }
+
+    if (wasAdmin !== isAdmin) {
+      selected.clear();
+      load();
+    }
+  }
+
+  el("adminBtn").addEventListener("click", function(){
+    el("loginPanel").classList.toggle("show");
+    if (el("loginPanel").classList.contains("show")) el("loginEmail").focus();
+  });
+
+  el("loginForm").addEventListener("submit", async function(event){
+    event.preventDefault();
+    var button = el("loginSubmit");
+    button.disabled = true;
+    showMessage("Signing in…");
+
+    var result = await db.auth.signInWithPassword({
+      email: el("loginEmail").value.trim(),
+      password: el("loginPassword").value
+    });
+
+    button.disabled = false;
+    el("loginPassword").value = "";
+
+    if (result.error) {
+      showMessage("Sign in failed: " + result.error.message, "error");
+    } else {
+      showMessage("Signed in.", "ok");
+    }
+  });
+
+  el("logoutBtn").addEventListener("click", async function(){
+    await db.auth.signOut();
+    showMessage("Signed out.", "ok");
+  });
+
+  db.auth.onAuthStateChange(function(event, session){
+    applySession(session);
+  });
+
+  // ---------------- Buttons ----------------
+  el("refreshBtn").addEventListener("click", function(){
+    showMessage("");
+    load();
+  });
+  el("csvBtn").addEventListener("click", downloadCsv);
+  el("deleteSelectedBtn").addEventListener("click", function(){
+    deleteRows(Array.from(selected));
+  });
+  el("prevBtn").addEventListener("click", function(){
+    if (page > 0) { page--; renderTable(); }
+  });
+  el("nextBtn").addEventListener("click", function(){
+    if (page < pageCount() - 1) { page++; renderTable(); }
+  });
+  el("pageSize").addEventListener("change", function(){
+    pageSize = Number(el("pageSize").value);
+    page = 0;
+    renderTable();
+  });
+
+  // ---------------- Start ----------------
+  // onAuthStateChange above runs once at start with the saved session (if any)
   load();
   setInterval(load, REFRESH_MS);
   setInterval(updateLatestMeta, 15000);
 })();
-
 (function(){
   var root=document.documentElement, btn=document.getElementById('themeBtn'), label=btn.querySelector('.label'), saved=null;
   try{saved=localStorage.getItem('theme')}catch(e){}
