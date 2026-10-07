@@ -612,18 +612,21 @@ html[data-theme="light"] .theme .sun{display:none}html[data-theme="light"] .them
       return;
     }
 
-    var keys = columns().map(function(c){ return c.key; });
-    if (keys.indexOf("unit") < 0) keys.splice(keys.indexOf("weight") + 1, 0, "unit");
+    // Same columns and order as the Supabase table export.
+    // Visitors get the columns they may read; the admin gets all of them.
+    var CSV_COLUMNS = ["id", "created_at", "device", "weight", "unit", "raw", "calibration_factor"];
+    var keys = CSV_COLUMNS.filter(function(k){
+      return rows.length > 0 && Object.prototype.hasOwnProperty.call(rows[0], k);
+    });
     var textKeys = ["device", "unit"];
 
-    var lines = [keys.concat(["local_time"]).join(",")];
+    var lines = [keys.join(",")];
     rows.forEach(function(r){
       var values = keys.map(function(k){ return csvValue(r[k], textKeys.indexOf(k) >= 0); });
-      values.push(csvValue(formatTime(r.created_at), false));
       lines.push(values.join(","));
     });
 
-    var blob = new Blob(["﻿" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+    var blob = new Blob([lines.join("\r\n") + "\r\n"], { type: "text/csv;charset=utf-8" });
     var link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
     link.download = "scale_readings_" + new Date().toISOString().slice(0, 10) + ".csv";
