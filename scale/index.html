@@ -267,19 +267,18 @@ html[data-theme="light"] .theme .sun{display:none}html[data-theme="light"] .them
   var db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   // ---------------- Columns ----------------
-  var PUBLIC_COLUMNS = [
-    { key: "created_at", label: "Time",   format: formatTime },
-    { key: "device",     label: "Device", className: "mono" },
-    { key: "weight",     label: "Weight", className: "num", format: formatWeightWithUnit }
+  // Every column of the table, in the same order as the database and the CSV
+  var ALL_COLUMNS = [
+    { key: "id",                 label: "ID",                 className: "mono" },
+    { key: "created_at",         label: "Created at",         format: formatTime },
+    { key: "device",             label: "Device",             className: "mono" },
+    { key: "weight",             label: "Weight",             className: "num" },
+    { key: "unit",               label: "Unit" },
+    { key: "raw",                label: "Raw",                className: "num" },
+    { key: "calibration_factor", label: "Calibration factor", className: "num" }
   ];
-  var ADMIN_COLUMNS = [
-    { key: "id",                 label: "ID",         className: "mono" },
-    { key: "created_at",         label: "Time",       format: formatTime },
-    { key: "device",             label: "Device",     className: "mono" },
-    { key: "weight",             label: "Weight",     className: "num", format: formatWeightWithUnit },
-    { key: "raw",                label: "Raw",        className: "num" },
-    { key: "calibration_factor", label: "Cal factor", className: "num" }
-  ];
+  var PUBLIC_COLUMNS = ALL_COLUMNS;
+  var ADMIN_COLUMNS  = ALL_COLUMNS;
 
   // ---------------- State ----------------
   var rows       = [];
@@ -298,9 +297,6 @@ html[data-theme="light"] .theme .sun{display:none}html[data-theme="light"] .them
     return Number(value).toFixed(1);
   }
 
-  function formatWeightWithUnit(value, row){
-    return formatWeight(value) + " " + row.unit;
-  }
 
   function formatTime(iso){
     return new Date(iso).toLocaleString(undefined, {
