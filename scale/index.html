@@ -87,7 +87,8 @@ h2{font-family:var(--font-display);font-weight:600;font-size:1.15rem;margin:0}
   line-height:1.05;margin:.5rem 0 .3rem;font-variant-numeric:tabular-nums}
 .weight .unit{font-size:.4em;color:var(--dim);margin-left:.2em;font-weight:500}
 .meta{font-size:.88rem;color:var(--dim)}
-.stats{display:grid;grid-template-rows:repeat(3,1fr);gap:.7rem}
+.stats{display:grid;grid-template-rows:repeat(4,1fr);gap:.7rem}
+.stat .v small{font-size:.7em;color:var(--dim);font-weight:500;margin-left:.3em}
 .stat{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:.7rem 1rem;
   display:flex;justify-content:space-between;align-items:baseline;gap:1rem}
 .stat .k{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
@@ -194,6 +195,7 @@ html[data-theme="light"] .theme .sun{display:none}html[data-theme="light"] .them
       <div class="stat"><span class="k">Readings</span><span class="v" id="statCount">—</span></div>
       <div class="stat"><span class="k">Heaviest</span><span class="v" id="statMax">—</span></div>
       <div class="stat"><span class="k">Lightest</span><span class="v" id="statMin">—</span></div>
+      <div class="stat"><span class="k">Battery</span><span class="v" id="statBattery">—</span></div>
     </div>
   </div>
 
@@ -275,7 +277,13 @@ html[data-theme="light"] .theme .sun{display:none}html[data-theme="light"] .them
     { key: "weight",             label: "Weight",             className: "num" },
     { key: "unit",               label: "Unit" },
     { key: "raw",                label: "Raw",                className: "num" },
-    { key: "calibration_factor", label: "Calibration factor", className: "num" }
+    { key: "calibration_factor", label: "Calibration factor", className: "num" },
+    { key: "battery_voltage",    label: "Battery V",          className: "num", format: formatVolts },
+    { key: "battery_percent",    label: "Battery %",          className: "num", format: formatPercent },
+    { key: "battery_hours_left", label: "Hours left",         className: "num" },
+    { key: "reason",             label: "Reason",             className: "mono" },
+    { key: "stored_offline",     label: "Offline",            format: formatYesNo },
+    { key: "time_unknown",       label: "Time unknown",       format: formatYesNo }
   ];
   var PUBLIC_COLUMNS = ALL_COLUMNS;
   var ADMIN_COLUMNS  = ALL_COLUMNS;
@@ -295,6 +303,55 @@ html[data-theme="light"] .theme .sun{display:none}html[data-theme="light"] .them
   // ---------------- Formatting ----------------
   function formatWeight(value){
     return Number(value).toFixed(1);
+  }
+
+  function formatVolts(value){
+    return Number(value).toFixed(2);
+  }
+
+  function formatPercent(value){
+    return value + "%";
+  }
+
+  function formatYesNo(value){
+    if (value) {
+      return "yes";
+    } else {
+      return "";
+    }
+  }
+
+  function formatHoursLeft(hours){
+    var h = Math.floor(hours);
+    var m = Math.round((hours - h) * 60);
+    return "~" + h + " h " + m + " min left";
+  }
+
+  // Battery card: newest row that has battery data
+  function renderBattery(){
+    var box = el("statBattery");
+    var row = null;
+    for (var i = 0; i < rows.length; i++) {
+      if (rows[i].battery_voltage !== null && rows[i].battery_voltage !== undefined) {
+        row = rows[i];
+        break;
+      }
+    }
+
+    box.textContent = "";
+    if (!row) {
+      box.textContent = "—";
+      return;
+    }
+
+    box.textContent = row.battery_percent + "% · " + formatVolts(row.battery_voltage) + " V";
+    var detail = document.createElement("small");
+    if (row.battery_hours_left !== null && row.battery_hours_left !== undefined) {
+      detail.textContent = formatHoursLeft(row.battery_hours_left);
+    } else {
+      detail.textContent = "time left: measuring";
+    }
+    box.appendChild(detail);
   }
 
 
@@ -382,6 +439,8 @@ html[data-theme="light"] .theme .sun{display:none}html[data-theme="light"] .them
 
   // ---------------- Rendering ----------------
   function renderSummary(){
+    renderBattery();
+
     if (rows.length === 0) {
       latestRow = null;
       el("latestWeight").textContent = "—";
@@ -609,7 +668,9 @@ html[data-theme="light"] .theme .sun{display:none}html[data-theme="light"] .them
 
     // Same columns and order as the Supabase table export.
     // Visitors get the columns they may read; the admin gets all of them.
-    var CSV_COLUMNS = ["id", "created_at", "device", "weight", "unit", "raw", "calibration_factor"];
+    var CSV_COLUMNS = ["id", "created_at", "device", "weight", "unit", "raw", "calibration_factor",
+                       "battery_voltage", "battery_percent", "battery_hours_left",
+                       "reason", "stored_offline", "time_unknown"];
     var keys = CSV_COLUMNS.filter(function(k){
       return rows.length > 0 && Object.prototype.hasOwnProperty.call(rows[0], k);
     });
