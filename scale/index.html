@@ -262,7 +262,10 @@ html[data-theme="light"] .theme .sun{display:none}html[data-theme="light"] .them
   var SUPABASE_URL = "https://pxphdvyjbiqeozqrxles.supabase.co";
   var SUPABASE_KEY = "sb_publishable_x08e2Fpkwmqu5d-FOZ0rWQ_IDUU0MoF";
   var ADMIN_EMAIL  = "amd858@gmail.com";
-  var TABLE        = "scale_readings";
+  // The scale sends raw values to scale_raw and tare/calibration/battery to
+  // scale_context. The view scale_weights joins them and calculates the weight.
+  var TABLE        = "scale_weights";   // read from here
+  var DELETE_TABLE = "scale_raw";       // a view can not be deleted from; ids are scale_raw ids
   var REFRESH_MS   = 10000;
   var BATCH_SIZE   = 1000;   // Supabase returns at most 1000 rows per request
 
@@ -277,6 +280,7 @@ html[data-theme="light"] .theme .sun{display:none}html[data-theme="light"] .them
     { key: "weight",             label: "Weight",             className: "num" },
     { key: "unit",               label: "Unit" },
     { key: "raw",                label: "Raw",                className: "num" },
+    { key: "zero_offset",        label: "Zero offset",        className: "num" },
     { key: "calibration_factor", label: "Calibration factor", className: "num" },
     { key: "battery_voltage",    label: "Battery V",          className: "num", format: formatVolts },
     { key: "battery_percent",    label: "Battery %",          className: "num", format: formatPercent },
@@ -634,7 +638,7 @@ html[data-theme="light"] .theme .sun{display:none}html[data-theme="light"] .them
     if (!window.confirm(question)) return;
 
     showMessage("Deleting…");
-    var result = await db.from(TABLE).delete().in("id", ids).select("id");
+    var result = await db.from(DELETE_TABLE).delete().in("id", ids).select("id");
 
     if (result.error) {
       showMessage("Delete failed: " + result.error.message, "error");
@@ -668,7 +672,7 @@ html[data-theme="light"] .theme .sun{display:none}html[data-theme="light"] .them
 
     // Same columns and order as the Supabase table export.
     // Visitors get the columns they may read; the admin gets all of them.
-    var CSV_COLUMNS = ["id", "created_at", "device", "weight", "unit", "raw", "calibration_factor",
+    var CSV_COLUMNS = ["id", "created_at", "device", "weight", "unit", "raw", "zero_offset", "calibration_factor",
                        "battery_voltage", "battery_percent", "battery_hours_left",
                        "reason", "stored_offline", "time_unknown"];
     var keys = CSV_COLUMNS.filter(function(k){
